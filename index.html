@@ -476,7 +476,20 @@
 				return `translate(${x}, ${y}) rotate(${rotation})`; // Center and rotate
 			})
 			.attr("dy", d => d.depth === 1 ? "0.35em" : "0.25em") // Smaller for components
-			.attr("font-size", d => d.depth === 1 ? "16px" : "10px") // Larger for groups, smaller for components
+			//.attr("font-size", d => d.depth === 1 ? "16px" : "10px") // Larger for groups, smaller for components
+
+			.attr("font-size", d => {
+			const text = d.data.name ? d.data.name : ""; // Fallback to empty string if name is not defined
+			const textLength = text.length; // Safe to access length now
+				// Conditional font size adjustment based on string length
+				if (textLength > 18) {
+					return d.depth === 1 ? "12px" : "10px"; // Smaller font for longer names
+				} else {
+					return d.depth === 1 ? "14px" : "11px"; // Default sizes
+				}
+			})
+			.attr("font-weight", "bold") // Set font weight to bold
+
 			.attr("fill", d => {
 				const weight = weights[d.data.name] || 0; // Get the weight for the skill component
 
