@@ -447,13 +447,17 @@
 					// For groups (depth 1), find the max weight of its components
 					const groupComponents = d.children || [];
 					const groupMaxWeight = Math.max(...groupComponents.map(c => weights[c.data.name] || 0));
-					if (groupMaxWeight === 0) return colorScale(groupMaxWeight);
+					if (maxWeight === 1) {
+						if (groupMaxWeight === 1) return colorScale(upperBound);
+					}
 					return colorScale(groupMaxWeight); // Color based on max component weight
 				}
 				if (d.depth === 2) {
 					// For components (depth 2), use their specific weight
 					const weight = weights[d.data.name] || 0;
-					//if (maxWeight === 0) return colorScale(weight+2);
+					if (maxWeight === 1) {
+						if (weight === 1) return colorScale(upperBound);
+					}
 					return colorScale(weight);
 				}
             })
@@ -499,11 +503,12 @@
 			const groupMaxWeight = Math.max(...groupComponents.map(c => weights[c.data.name] || 0));
 			
 			// Set color based on groupMaxWeight
-			//if (maxWeight === 1) return (groupMaxWeight === 0) ? "black" : "white"; // Adjust color based on max weight 
+			if (maxWeight === 1) return (groupMaxWeight === 0) ? "black" : "white"; // Adjust color based on max weight 
+			
 			return (groupMaxWeight === 0 || groupMaxWeight === 1 || groupMaxWeight < 0.2 * maxWeight) ? "black" : "white"; // Adjust color based on max weight
 		}
 
-		//if (maxWeight === 1) return (weight === 0) ? "black" : "white"; // Adjust color based on max weight 
+		if (maxWeight === 1) return (weight === 0) ? "black" : "white"; // Adjust color based on max weight 
 		return (weight === 0 || weight === 1 || weight < 0.2 * maxWeight) ? "black" : "white"; // Set text color to white if < 20% of max weight
 			})
 		.text(d => d.data.name);
