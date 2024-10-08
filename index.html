@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICE Skills Wheel</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        .narrow-input {
+            width: 60px; /* Set to desired width */
+        }
+        h2 {
+            margin-bottom: 10px;
+            text-align: center;
+            width: 100%;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #sunburst {
+            width: 750px; /* Set width for the sunburst */
+            height: 750px; /* Set height for the sunburst */
+            position: relative;
+        }
+        .sunburst-text {
+            text-anchor: middle; /* Center align text horizontally */
+            overflow: hidden; /* Hide overflow */
+            text-overflow: ellipsis; /* Optional: Show ellipsis for overflowed text */
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div>
+        <h2>ICE Skills Framework Badge Creator</h2>
+		<label><input type="checkbox" id="toggleMax" unchecked>Binary (checked) or Scale (unchecked)</label>
+        <!-- Skills Combination Dropdown -->
+        <label for="skillsCombo">Skills Combination:</label>
+        <select id="skillsCombo">
+            <option value="custom">Custom Skills Combination</option>
+            <option value="leadership">Leadership</option>
+            <option value="empathy">Empathy</option>
+            <option value="networking">Networking</option>
+            <option value="EntreSpottingOpp">EntreComp: Spotting Opportunities</option>
+            <option value="EntreCreativity">EntreComp: Creativity</option>
+            <option value="EntreVision">EntreComp: Vision</option>
+            <option value="EntreValuingIdeas">EntreComp: Valuing Ideas</option>
+            <option value="EntreEthical">EntreComp: Ethical and Sustainable Thinking</option>
+            <option value="EntreSelf">EntreComp: Self-awareness and Self-efficacy</option>
+            <option value="EntreMotivation">EntreComp: Motivation and Perseverance</option>
+            <option value="EntreResources">EntreComp: Mobilising Resources</option>
+            <option value="EntreFin">EntreComp: Financial and Economic Literacy</option>
+            <option value="EntrePersuade">EntreComp: Mobilising Others</option>
+            <option value="EntreInitiative">EntreComp: Taking the Initiative</option>
+            <option value="EntrePlanning">EntreComp: Planning and Management</option>
+            <option value="EntreRisk">EntreComp: Coping with Ambiguity, Uncertainty and Risk</option>
+            <option value="EntreTeam">EntreComp: Working with Others</option>
+            <option value="EntreLearning">EntreComp: Learning through Experience</option>
+
+            <!-- Add more options corresponding to your skill combinations -->
+        </select>
+        <form id="weightForm">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Skill Group</th>
+                        <th>Skill Component</th>
+                        <th>Weight</th>
+                    </tr>
+                </thead>
+                <tbody id="skillTableBody">
+                    <!-- Dynamic rows will be injected here -->
+                </tbody>
+            </table>
+            <button type="button" id="randomizeButton">The lazy testing button: Click here to get some random values</button>
+        </form>
+    </div>
+    <div id="sunburst">
+	</div>
+	<button type="button" id="exportButton">Export Skills Badge</button>
+</div>
+
+<script>
+	// Table containing predefined skill combinations
+	const skillCombinations = {
+		leadership:[10,20,30,40,50,60,70,80,90,100,10,20,30,40,50,60,70,80,90,100,10,20,30,40,50,60,70,80,90,100],
+		empathy:[5,15,25,35,45,55,65,75,85,95,5,15,25,35,45,55,65,75,85,95,5,15,25,35,45,55,65,75,85,95],
+		networking:[53,62,23,49,88,46,88,45,70,55,4,82,48,79,28,40,58,76,54,54,83,80,15,27,95,18,46,43,97,54],
+		EntreSpottingOpp:[4,32,72,32,44,50,3,69,53,1,22,8,3,97,29,22,32,42,71,80,1,84,81,36,25,75,51,36,52,91],
+		EntreCreativity:[69,44,34,67,45,17,9,83,32,98,39,34,60,82,2,64,64,21,95,42,94,29,79,87,1,22,94,54,51,75],
+		EntreVision:[71,76,25,94,5,57,58,76,6,18,14,9,27,45,50,39,49,80,5,27,79,94,10,24,75,22,50,32,32,22],
+		EntreValuingIdeas:[73,32,23,15,57,27,78,3,87,12,10,28,55,83,87,61,14,66,97,55,98,73,91,97,64,63,95,80,86,22],
+		EntreEthical:[79,96,4,98,57,98,40,42,62,66,3,6,95,69,52,86,86,80,90,72,81,67,35,41,49,53,85,41,90,50],
+		EntreSelf:[2,22,12,31,88,0,0,42,62,66,3,6,95,69,52,86,86,80,90,72,81,67,35,41,49,53,85,41,90,50],		
+		EntreMotivation:[27,21,35,68,44,42,38,69,12,53,58,78,87,84,41,27,88,41,63,10,11,14,85,38,18,79,97,37,63,60],
+		EntreResources:[85,65,27,62,38,48,43,100,78,18,47,95,95,3,39,14,85,43,64,23,32,49,41,55,69,6,35,23,55,27],
+		EntreFin:[23,66,29,73,15,85,7,67,24,14,74,25,53,9,41,22,64,51,7,42,74,31,21,49,53,84,0,5,90,90],
+		EntrePersuade:[40,100,87,83,10,77,57,24,43,34,31,56,5,78,34,91,99,46,87,46,93,13,27,96,92,66,29,91,91,85],
+		EntreInitiative:[64,2,86,56,46,47,60,29,54,41,26,67,24,44,29,24,43,57,47,41,89,62,39,28,49,65,96,80,7,40],
+		EntrePlanning:[59,66,26,58,7,84,54,26,13,58,72,93,5,50,21,77,42,72,56,55,49,10,10,91,91,56,93,55,91,77],
+		EntreRisk:[44,36,55,68,47,23,39,86,85,70,88,55,73,60,23,30,62,87,30,61,74,67,89,71,51,5,45,86,52,61],
+		EntreTeam:[7,22,16,39,14,90,31,64,31,26,92,76,33,57,36,77,98,71,24,58,68,44,5,73,54,62,27,19,18,73],
+		EntreLearning:[43,8,44,84,17,74,82,82,74,85,31,10,92,13,75,82,47,83,70,68,52,10,19,50,15,67,82,32,37,57],
+		// Add other skill combinations
+	};
+
+	// Table of Skill groups and Skill components
+    const data = {
+        children: [
+            {
+                name: "Conceptual skills",
+                children: [
+                    { name: "Abstract thinking", value: 1 },
+                    { name: "Creativity", value: 1 },
+                    { name: "Mental agility", value: 1 },
+                    { name: "Strategic thinking", value: 1 },
+                    { name: "Synthesis", value: 1 },
+                    { name: "Systems thinking", value: 1 }
+                ]
+            },
+            {
+                name: "Critical self reflection",
+                children: [
+                    { name: "External self awareness", value: 1 },
+                    { name: "Internal self awareness", value: 1 },
+                    { name: "Self-regulation", value: 1 }
+                ]
+            },
+            {
+                name: "Evaluative skills",
+                children: [
+                    { name: "Comparative reasoning", value: 1 },
+                    { name: "Counterfactual thinking", value: 1 },
+                    { name: "Critical analysis", value: 1 },
+                    { name: "Decision making", value: 1 },
+                    { name: "Environment scanning", value: 1 },
+                    { name: "Evidence gathering", value: 1 },
+                    { name: "Interpretation", value: 1 },
+                    { name: "Pattern recognition", value: 1 },
+                    { name: "Problem solving", value: 1 }
+                ]
+            },
+            {
+                name: "Organisational skills",
+                children: [
+                    { name: "Forecasting", value: 1 },
+                    { name: "Knowledge brokering", value: 1 },
+                    { name: "Modelling", value: 1 },
+                    { name: "Organising", value: 1 },
+                    { name: "Prioritisation", value: 1 }
+                ]
+            },
+            {
+                name: "Relational skills",
+                children: [
+                    { name: "Active listening", value: 1 },
+                    { name: "Collaboration", value: 1 },
+                    { name: "Communication", value: 1 },
+                    { name: "Delegation", value: 1 },
+                    { name: "Feedback", value: 1 },
+                    { name: "Influencing", value: 1 },
+                    { name: "Negotiation", value: 1 }
+                ]
+            }
+        ]
+    };
+	
+	// Function to reset toggleMax and run updateMaxValue
+	function resetToggleMax() {
+		console.log("Resetting toggle state");
+		const toggleMax = document.getElementById("toggleMax");
+		toggleMax.checked = false; // Reset toggleMax to off
+		updateMaxValue(); // Call updateMaxValue to apply the toggle change
+	}
+
+	// Function to reset skills combo dropdown
+	function resetSkillsCombination() {
+		console.log("Resetting Skills Combination Dropdown");
+		skillsCombo = document.getElementById("skillsCombo");
+		skillsCombo.value = "custom"; // Reset dropdown to custom
+		updateSunburst();
+	}
+
+
+	// Function to populate input field weights based on skill combination selection
+	function updateSkillWeights(selectedCombination) {
+		console.log("Updating skill fields");
+		const values = skillCombinations[selectedCombination] || []; // Get the data array for the selected combination
+		for (let i = 1; i <= 30; i++) {
+			document.getElementById(`input${i}`).value = values[i - 1] || 0; // Set the input field to the corresponding value
+			document.getElementById(`slider${i}`).value = values[i - 1] || 0; // Set the slider to the corresponding value
+		}
+		updateSunburst(); // Re-draw the sunburst with updated weights
+	}
+
+	// Function to export the sunburst as an image
+	function exportSunburst() {
+		console.log("Executing export function...");
+		const sunburstElement = document.getElementById("sunburst");
+
+		if (!sunburstElement) {
+			console.error("Sunburst element not found!");
+			return;
+		}
+
+		// Use html2canvas to take a screenshot of the sunburst
+		html2canvas(sunburstElement).then(canvas => {
+			// Create a link element
+			const link = document.createElement('a');
+			link.href = canvas.toDataURL(); // Convert canvas to data URL (PNG format by default)
+			link.download = 'sunburst.png'; // Set the default filename
+
+			// Programmatically click the link to trigger the download
+			link.click();
+		}).catch(err => {
+			console.error("Error capturing sunburst with html2canvas: ", err);
+		});
+	}
+	
+	// Function to update the max value of sliders based on toggle state
+	function updateMaxValue() {
+		console.log("Executing toggle function...");
+		const toggle = document.getElementById("toggleMax");
+		const newMaxValue = toggle.checked ? 1 : 100;
+		const oldMaxValue = toggle.checked ? 100 : 1;
+
+
+		// Update all sliders
+		for (let i = 1; i <= 30; i++) {
+			const slider = document.getElementById(`slider${i}`);
+			const input = document.getElementById(`input${i}`);
+			slider.max = newMaxValue; // Set max based on toggle
+			// If current slider value is greater than new max, reset it to the new max
+			if (slider.value > oldMaxValue / 2) {
+				slider.value = newMaxValue;
+			}
+			else {
+				slider.value = 0;
+			}
+			input.max = newMaxValue; // Set max based on toggle
+			if (input.value > oldMaxValue / 2) {
+				input.value = newMaxValue;
+			}
+			else {
+				input.value = 0;
+			}
+		}
+		updateSunburst(); // Update the sunburst after changing the max value
+	}
+
+    // Function to randomize weights
+    function randomizeWeights() {
+		console.log("Executing randomization function...");
+		const isToggled = document.getElementById('toggleMax').checked;
+        for (let i = 1; i <= 30; i++) {
+			const randomValue = isToggled 
+				? Math.floor(Math.random() * 2)  // Random number between 0 and 100
+				: Math.floor(Math.random() * 101); // Random number between 1 and 10
+            document.getElementById(`input${i}`).value = randomValue; // Set input value
+            document.getElementById(`slider${i}`).value = randomValue; // Set slider value too
+        }
+        resetSkillsCombination();
+		updateSunburst(); // Update the sunburst after randomizing
+    }
+
+    function syncSliderAndInput(sliderId, inputId) {
+		console.log("Syncing slider and input");
+        const slider = document.getElementById(sliderId);
+        const input = document.getElementById(inputId);
+
+        // Update the input field when slider changes
+        slider.addEventListener('input', function() {
+            input.value = slider.value;
+            resetSkillsCombination();
+			updateSunburst();
+        });
+
+        // Update the slider when input field changes
+        input.addEventListener('input', function() {
+            slider.value = input.value;
+			resetSkillsCombination();
+            updateSunburst();
+        });
+    }
+
+    function renderSunburst(weights) {
+		console.log("Rendering sunburst");
+
+        d3.select("#sunburst").selectAll("*").remove(); // Clear existing content
+
+        const width = 750;  // Increase the width
+        const height = 750; // Increase the height
+
+        const radius = Math.min(width, height) / 2;
+
+        const partition = d3.partition()
+            .size([2 * Math.PI, radius]);
+
+        const root = d3.hierarchy(data)
+            .sum(d => d.value);   // All segments have equal sizes
+
+        partition(root);
+
+        const svg = d3.select("#sunburst")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        const arc = d3.arc()
+            .startAngle(d => d.x0)
+            .endAngle(d => d.x1)
+            .innerRadius(d => d.y0)
+            .outerRadius(d => d.y1);
+			
+		// 1. Get the min and max weights
+		const minWeight = 1;  // Minimum is fixed at 1 (light blue)
+		const maxWeight = Math.max(...Object.values(weights), 1); // Maximum based on actual weights
+
+		// 2. Define color scale from light blue (low) to dark blue (high), dynamic upper bound
+		const colorScale = d3.scaleSequential(d3.interpolateBlues)
+			.domain([minWeight, maxWeight]);
+
+		svg.selectAll("path")
+            .data(root.descendants())
+            .enter().append("path")
+            .attr("d", arc)
+            .style("fill", d => {
+                if (d.depth === 0) return "#fff"; // Center is white
+				if (d.depth === 1) {
+					// For groups (depth 1), find the max weight of its components
+					const groupComponents = d.children || [];
+					const groupMaxWeight = Math.max(...groupComponents.map(c => weights[c.data.name] || 0));
+					if (groupMaxWeight === 0) return "#f7fbff";
+					if (maxWeight === 1) return "#08306b"; 
+					if (groupMaxWeight === 1) return "#ebf2f9";
+					return colorScale(groupMaxWeight); // Color based on max component weight
+				}
+				if (d.depth === 2) {
+					// For components (depth 2), use their specific weight
+					const weight = weights[d.data.name] || 0;
+					if (weight === 0) return "#f7fbff";
+					if (weight === 1) {
+						if (maxWeight === 1) return "#08306b"; 
+						return "#ebf2f9";
+					}
+					return colorScale(weight);
+				}
+            })
+            .style("stroke", "#fff");
+			
+		// Render labels
+		svg.selectAll("text")
+			.data(root.descendants())
+			.enter().append("text")
+			.attr("class", "sunburst-text") // Apply the CSS class
+			.attr("transform", d => {
+				const centroid = arc.centroid(d);
+				const x = centroid[0] * 1; // Adjust to fit text in segments
+				const y = centroid[1] * 1; // Adjust to fit text in segments
+				const angle = (d.x0 + d.x1) / 2 * 180 / Math.PI; // Calculate the angle in degrees
+				
+				// Adjust rotation based on position
+				const rotation = (angle > 180 && angle < 360) ? angle + 90 : angle - 90; // Adjust for left-hand side
+
+				return `translate(${x}, ${y}) rotate(${rotation})`; // Center and rotate
+			})
+			.attr("dy", d => d.depth === 1 ? "0.35em" : "0.25em") // Smaller for components
+			.attr("font-size", d => d.depth === 1 ? "16px" : "10px") // Larger for groups, smaller for components
+			.attr("fill", d => {
+				const weight = weights[d.data.name] || 0; // Get the weight for the skill component
+
+		if (d.depth === 1) {
+			// Calculate maximum weight of components in the group
+			const groupComponents = root.descendants().filter(child => child.depth === 2 && child.parent === d);
+			const groupMaxWeight = Math.max(...groupComponents.map(c => weights[c.data.name] || 0));
+			
+			// Set color based on groupMaxWeight
+			if (maxWeight === 1) return (groupMaxWeight === 0) ? "black" : "white"; // Adjust color based on max weight 
+			return (groupMaxWeight === 0 || groupMaxWeight === 1 || groupMaxWeight < 0.2 * maxWeight) ? "black" : "white"; // Adjust color based on max weight
+		}
+
+		if (maxWeight === 1) return (weight === 0) ? "black" : "white"; // Adjust color based on max weight 
+		return (weight === 0 || weight === 1 || weight < 0.2 * maxWeight) ? "black" : "white"; // Set text color to white if < 20% of max weight
+			})
+		.text(d => d.data.name);
+
+		// Add "ICE" text in the center
+		svg.append("text")
+			.attr("class", "sunburst-text")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central") // Center the text vertically
+			.attr("font-size", "36px")
+			.attr("fill", "black") // You can change the color as needed
+			.attr("y", -70) // Adjust y value to position "Framework" below "ICE Skills"
+			.text("ICE");
+
+		// Add "Skills" text in the center
+		svg.append("text")
+			.attr("class", "sunburst-text")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central") // Center the text vertically
+			.attr("font-size", "36px")
+			.attr("fill", "black") // You can change the color as needed
+			.attr("y", -30) // Adjust y value to position "Framework" below "ICE Skills"
+			.text("Skills");
+
+		// Add "Framework" text beneath "ICE Skills"
+		svg.append("text")
+			.attr("class", "sunburst-text")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central") // Center the text vertically
+			.attr("font-size", "36px")
+			.attr("fill", "black") // You can change the color as needed
+			.attr("y", 10) // Adjust y value to position "Framework" below "ICE Skills"
+			.text("Framework");
+
+		console.log("Updating sunburst combi skill label inside rendering");
+		// Update the sunburst label with the selected combination name
+		svg.select(".combination-label").remove(); // Remove the old label if it exists
+		selectedCombination = document.getElementById("skillsCombo").value
+		if (selectedCombination === "custom") {selectedCombination = ""}
+		svg.append("text")
+			.attr("class", "combination-label")
+			.attr("text-anchor", "middle")
+			.attr("font-size", "24px")
+			.attr("y", 60) // Position the label beneath "ICE Skills Framework"
+			.text(selectedCombination.charAt(0).toUpperCase() + selectedCombination.slice(1)); // Capitalize the first letter
+
+
+			
+	}
+
+    function updateSunburst() {
+		console.log("Updating sunburst");
+        const form = document.getElementById("weightForm");
+        const weights = Array.from(form.elements).reduce((acc, input) => {
+            if (input.name.startsWith("weight")) {
+                const index = +input.name.replace("weight", ""); // Get the index from "weightX"
+                const skillName = getSkillNameByIndex(index); // Map to the actual skill name
+                acc[skillName] = +input.value; // Store weight for the corresponding skill name
+            }
+            return acc;
+        }, {});
+
+        renderSunburst(weights);
+    }
+
+    // Helper function to map weight indices to actual skill names
+    function getSkillNameByIndex(index) {
+		console.log("Getting skill name by index");
+        // Flatten the skills into a single array
+        const skillMapping = data.children.reduce((acc, group) => {
+            const groupSkills = group.children.map(skill => skill.name);
+            return acc.concat(groupSkills);
+        }, []);
+
+        return skillMapping[index - 1]; // Subtract 1 because the form input names start from "weight1"
+    }
+
+    // Function to create the input and slider fields
+    function createSkillComponents() {
+		console.log("Creating skill components");
+        const tbody = document.getElementById('skillTableBody');
+        let inputIndex = 1; // Start numbering from 1
+
+        data.children.forEach(group => {
+            const groupRowCount = group.children.length;
+
+            // Create rows for each skill component
+            group.children.forEach((component, index) => {
+                const row = document.createElement('tr');
+
+                // If it's the first child of the group, add the group name
+                if (index === 0) {
+                    row.innerHTML = `<td rowspan="${groupRowCount}">${group.name}</td>`;
+                }
+
+                // Skill Component Name
+                row.innerHTML += `<td>${component.name}</td>`;
+
+                // Input and Slider
+                row.innerHTML += `
+                    <td>
+                        <input type="number" id="input${inputIndex}" name="weight${inputIndex}" min="0" max="100" value="${component.value}" class="narrow-input" required onchange="updateSunburst()">
+                        <input type="range" id="slider${inputIndex}" min="0" max="100" value="${component.value}" class="narrow-input" onchange="updateSunburst()">
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+                inputIndex++; // Increment the input index
+            });
+        });
+    }
+
+
+    // Call the function to create the skill components
+    createSkillComponents();
+
+    // Initial render
+    updateSunburst();
+	// Call the function to sync each slider with its respective input field
+    for (let i = 1; i <= 30; i++) {
+        syncSliderAndInput(`slider${i}`, `input${i}`);
+    }
+	// Attach the randomize function to the button
+	console.log("Attaching randomization function...");
+    document.getElementById('randomizeButton').addEventListener('click', randomizeWeights);
+
+	// Attach the toggle function to the checkbox
+	console.log("Attaching toggle function...");
+	document.getElementById("toggleMax").addEventListener("change", function() {
+		updateMaxValue();
+		resetSkillsCombination();
+	
+	});
+	
+	// Attach the export function to the button
+	console.log("Attaching export function...");
+	document.getElementById('exportButton').addEventListener('click', exportSunburst);
+	
+	// Attach event listener to the Skills Combination dropdown
+	console.log("Attaching Skill combination functions...");
+	document.getElementById("skillsCombo").addEventListener("change", function() {
+		const selectedCombination = this.value;
+
+		// a) Reset toggleMax and call updateMaxValue
+		resetToggleMax();
+
+		// b) Populate fields based on the selected combination
+		if (selectedCombination !== "custom") {
+			updateSkillWeights(selectedCombination);
+		}
+
+	});
+	
+</script>
+
+</body>
+</html>
