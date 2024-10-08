@@ -18,6 +18,9 @@
             align-items: flex-start;
             gap: 20px;
         }
+		.form-group {
+			margin-bottom: 15px; /* Add space between form groups */
+			}
         .narrow-input {
             width: 60px; /* Set to desired width */
         }
@@ -58,8 +61,21 @@
 <div class="container">
     <div>
         <h2>ICE Skills Framework Badge Creator</h2>
+    <!-- Area of Interest Dropdown -->
+    <div class="form-group">
+		<label for="areaOfInterest">Area of Interest:</label>
+		<select id="areaOfInterest">
+			<option value="ICE">Innovation, Commercialisation and Entrepreneurship</option>
+			<option value="innovation">Innovation</option>
+			<option value="commercialisation">Commercialisation</option>
+			<option value="entrepreneurship">Entrepreneurship</option>
+		</select>
+	</div>	
+    <div class="form-group">
 		<label><input type="checkbox" id="toggleMax" unchecked>Binary (checked) or Scale (unchecked)</label>
         <!-- Skills Combination Dropdown -->
+	</div>	
+    <div class="form-group">
         <label for="skillsCombo">Skills Combination:</label>
         <select id="skillsCombo">
             <option value="custom">Custom Skills Combination</option>
@@ -81,9 +97,9 @@
             <option value="EntreRisk">EntreComp: Coping with Ambiguity, Uncertainty and Risk</option>
             <option value="EntreTeam">EntreComp: Working with Others</option>
             <option value="EntreLearning">EntreComp: Learning through Experience</option>
-
             <!-- Add more options corresponding to your skill combinations -->
         </select>
+	</div>	
         <form id="weightForm">
             <table>
                 <thead>
@@ -107,6 +123,9 @@
 
 <script>
 	// Table containing predefined skill combinations
+	var queryParams = getQueryParams();
+	console.log("Here are the params returned from the function: "+queryParams);
+	
 	const skillCombinations = {
 		leadership:[10,20,30,40,50,60,70,80,90,100,10,20,30,40,50,60,70,80,90,100,10,20,30,40,50,60,70,80,90,100],
 		empathy:[5,15,25,35,45,55,65,75,85,95,5,15,25,35,45,55,65,75,85,95,5,15,25,35,45,55,65,75,85,95],
@@ -135,8 +154,8 @@
             {
                 name: "Conceptual skills",
                 children: [
-                    { name: "Abstract thinking", value: 1 },
-                    { name: "Creativity", value: 1 },
+                    { name: "Abstract thinking", value: 1},
+                    { name: "Creativity", value: 1},
                     { name: "Mental agility", value: 1 },
                     { name: "Strategic thinking", value: 1 },
                     { name: "Synthesis", value: 1 },
@@ -189,6 +208,33 @@
             }
         ]
     };
+
+	// Function to update a specific parameter in the URL
+	function updateUrlParameter(paramIndex, paramValue) {
+		const url = new URL(window.location.href); // Get the current URL
+		const params = new URLSearchParams(url.search); // Get URL parameters
+
+		// Update the specific parameter based on its position (1-based index)
+		params.set(`${paramIndex}`, paramValue); // Replace `param${paramIndex}` with actual parameter name if needed
+
+		// Set the new URL with updated parameters
+		window.history.replaceState({}, '', `${url.pathname}?${params}`);
+		console.log("Updated URL:", `${url.pathname}?${params}`);
+	}
+
+    function getQueryParams() {
+	  console.log("Entering parameter query function");
+      var params = {};
+      var queryString = window.location.search.substring(1);
+      var vars = queryString.split("&");
+      for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+      }
+	  console.log("Here are the parameters passed: "+params);
+	  console.log("Here are the parameters passed: "+params[decodeURIComponent(pair[0])]);
+      return params;
+    }
 	
 	// Function to reset toggleMax and run updateMaxValue
 	function resetToggleMax() {
@@ -313,6 +359,11 @@
 
         d3.select("#sunburst").selectAll("*").remove(); // Clear existing content
 
+        // Get the value of the specified column heading
+        console.log("Area: "+queryParams[2]);
+        const areaOfInterest = queryParams[2] ? Number(queryParams[2]) : 1;
+		console.log("areaOfInterest: "+areaOfInterest);
+
         const width = 750;  // Increase the width
         const height = 750; // Increase the height
 
@@ -340,12 +391,51 @@
             .outerRadius(d => d.y1);
 			
 		// 1. Get the min and max weights
-		const minWeight = 1;  // Minimum is fixed at 1 (light blue)
+		const minWeight = Math.min(...Object.values(weights), 0); // Maximum based on actual weights
 		const maxWeight = Math.max(...Object.values(weights), 1); // Maximum based on actual weights
 
-		// 2. Define color scale from light blue (low) to dark blue (high), dynamic upper bound
-		const colorScale = d3.scaleSequential(d3.interpolateBlues)
-			.domain([minWeight, maxWeight]);
+        // Adjust the domain based on the min and max weights
+        let upperBound = maxWeight;
+        if (maxWeight - 1 <= minWeight) {
+            upperBound = minWeight + 10; // Adjust upper bound if condition is met
+        }
+
+        // Define the color scale based on the area of interest
+        let colorScale;
+		let areaLabel;
+        if (areaOfInterest === 1) {
+            areaLabel = "ICE";
+			// Light blue to dark blue
+            colorScale = d3.scaleSequential(d3.interpolateBlues)
+						.domain([minWeight, upperBound]);
+        } else if (areaOfInterest === 2) {
+            areaLabel = "Innovation";
+            // Light turquoise to dark turquoise
+			console.log("setting turquoise colorScale: "+colorScale);
+            colorScale = d3.scaleSequential(d3.interpolate("#ccffff", "#008B8B"))
+						.domain([minWeight, upperBound]);
+			console.log("set turquoise colorScale: "+colorScale);
+        } else if (areaOfInterest === 3) {
+            areaLabel = "Commercialisation";
+            // Light yellow to dark yellow
+            colorScale = d3.scaleSequential(d3.interpolateYlOrBr)
+						.domain([minWeight, upperBound]);
+        } else if (areaOfInterest === 4) {
+            areaLabel = "Entrepreneurship";
+            // Light green to dark green
+            colorScale = d3.scaleSequential(d3.interpolateGreens)
+						.domain([minWeight, upperBound]);
+        } else {
+            areaLabel = "";
+            // Default color scale if none of the conditions are met
+            console.warn("No matching area of interest found. Using default scale.");
+            colorScale = d3.scaleSequential(d3.interpolateGreys)
+						.domain([minWeight, upperBound]);
+		}
+
+
+        console.log("set colorScale: "+colorScale);
+
 
 		svg.selectAll("path")
             .data(root.descendants())
@@ -357,19 +447,13 @@
 					// For groups (depth 1), find the max weight of its components
 					const groupComponents = d.children || [];
 					const groupMaxWeight = Math.max(...groupComponents.map(c => weights[c.data.name] || 0));
-					if (groupMaxWeight === 0) return "#f7fbff";
-					if (maxWeight === 1) return "#08306b"; 
-					if (groupMaxWeight === 1) return "#ebf2f9";
+					if (groupMaxWeight === 0) return colorScale(groupMaxWeight);
 					return colorScale(groupMaxWeight); // Color based on max component weight
 				}
 				if (d.depth === 2) {
 					// For components (depth 2), use their specific weight
 					const weight = weights[d.data.name] || 0;
-					if (weight === 0) return "#f7fbff";
-					if (weight === 1) {
-						if (maxWeight === 1) return "#08306b"; 
-						return "#ebf2f9";
-					}
+					//if (maxWeight === 0) return colorScale(weight+2);
 					return colorScale(weight);
 				}
             })
@@ -402,24 +486,25 @@
 			const groupMaxWeight = Math.max(...groupComponents.map(c => weights[c.data.name] || 0));
 			
 			// Set color based on groupMaxWeight
-			if (maxWeight === 1) return (groupMaxWeight === 0) ? "black" : "white"; // Adjust color based on max weight 
+			//if (maxWeight === 1) return (groupMaxWeight === 0) ? "black" : "white"; // Adjust color based on max weight 
 			return (groupMaxWeight === 0 || groupMaxWeight === 1 || groupMaxWeight < 0.2 * maxWeight) ? "black" : "white"; // Adjust color based on max weight
 		}
 
-		if (maxWeight === 1) return (weight === 0) ? "black" : "white"; // Adjust color based on max weight 
+		//if (maxWeight === 1) return (weight === 0) ? "black" : "white"; // Adjust color based on max weight 
 		return (weight === 0 || weight === 1 || weight < 0.2 * maxWeight) ? "black" : "white"; // Set text color to white if < 20% of max weight
 			})
 		.text(d => d.data.name);
-
+		
+		const fontSize = areaLabel.length > 10 ? "24px" : "36px";
 		// Add "ICE" text in the center
 		svg.append("text")
 			.attr("class", "sunburst-text")
 			.attr("text-anchor", "middle")
 			.attr("dominant-baseline", "central") // Center the text vertically
-			.attr("font-size", "36px")
+			.attr("font-size", fontSize)
 			.attr("fill", "black") // You can change the color as needed
-			.attr("y", -70) // Adjust y value to position "Framework" below "ICE Skills"
-			.text("ICE");
+			.attr("y", -60) // Adjust y value to position "Framework" below "ICE Skills"
+			.text(areaLabel);
 
 		// Add "Skills" text in the center
 		svg.append("text")
@@ -428,7 +513,7 @@
 			.attr("dominant-baseline", "central") // Center the text vertically
 			.attr("font-size", "36px")
 			.attr("fill", "black") // You can change the color as needed
-			.attr("y", -30) // Adjust y value to position "Framework" below "ICE Skills"
+			.attr("y", -20) // Adjust y value to position "Framework" below "ICE Skills"
 			.text("Skills");
 
 		// Add "Framework" text beneath "ICE Skills"
@@ -438,7 +523,7 @@
 			.attr("dominant-baseline", "central") // Center the text vertically
 			.attr("font-size", "36px")
 			.attr("fill", "black") // You can change the color as needed
-			.attr("y", 10) // Adjust y value to position "Framework" below "ICE Skills"
+			.attr("y", 20) // Adjust y value to position "Framework" below "ICE Skills"
 			.text("Framework");
 
 		console.log("Updating sunburst combi skill label inside rendering");
@@ -450,7 +535,7 @@
 			.attr("class", "combination-label")
 			.attr("text-anchor", "middle")
 			.attr("font-size", "24px")
-			.attr("y", 60) // Position the label beneath "ICE Skills Framework"
+			.attr("y", 70) // Position the label beneath "ICE Skills Framework"
 			.text(selectedCombination.charAt(0).toUpperCase() + selectedCombination.slice(1)); // Capitalize the first letter
 
 
@@ -488,7 +573,9 @@
     function createSkillComponents() {
 		console.log("Creating skill components");
         const tbody = document.getElementById('skillTableBody');
-        let inputIndex = 1; // Start numbering from 1
+        const values = Object.values(queryParams); // Convert to array for easier indexing
+
+		let inputIndex = 1; // Start numbering from 1
 
         data.children.forEach(group => {
             const groupRowCount = group.children.length;
@@ -497,10 +584,13 @@
             group.children.forEach((component, index) => {
                 const row = document.createElement('tr');
 
+				// Get the appropriate value from queryParams based on the index
+				const inputValue = values[inputIndex] ? Number(values[inputIndex]) : component.value; // Fallback to default value
+
                 // If it's the first child of the group, add the group name
                 if (index === 0) {
-                    row.innerHTML = `<td rowspan="${groupRowCount}">${group.name}</td>`;
-                }
+					row.innerHTML = `<td rowspan="${groupRowCount}">${group.name}</td>`;
+				}
 
                 // Skill Component Name
                 row.innerHTML += `<td>${component.name}</td>`;
@@ -508,8 +598,8 @@
                 // Input and Slider
                 row.innerHTML += `
                     <td>
-                        <input type="number" id="input${inputIndex}" name="weight${inputIndex}" min="0" max="100" value="${component.value}" class="narrow-input" required onchange="updateSunburst()">
-                        <input type="range" id="slider${inputIndex}" min="0" max="100" value="${component.value}" class="narrow-input" onchange="updateSunburst()">
+                        <input type="number" id="input${inputIndex}" name="weight${inputIndex}" min="0" max="100" value="${inputValue}" class="narrow-input" required onchange="updateSunburst()">
+                        <input type="range" id="slider${inputIndex}" min="0" max="100" value="${inputValue}" class="narrow-input" onchange="updateSunburst()">
                     </td>
                 `;
 
@@ -529,9 +619,26 @@
     for (let i = 1; i <= 30; i++) {
         syncSliderAndInput(`slider${i}`, `input${i}`);
     }
-	// Attach the randomize function to the button
-	console.log("Attaching randomization function...");
-    document.getElementById('randomizeButton').addEventListener('click', randomizeWeights);
+	//Initial value for the Area dropdown
+    const areaDropdown = document.getElementById("areaOfInterest");
+	if (queryParams[2]-1 >= 0 && queryParams[2] < areaDropdown.options.length) {
+		areaDropdown.selectedIndex = queryParams[2]-1; // Set the dropdown selection based on index
+    } else {
+		areaDropdown.selectedIndex = 0; // Default to the first option if index is out of bounds
+    }
+		
+	// Attach the Area function to the button
+	console.log("Attaching Area function...");
+	document.getElementById("areaOfInterest").addEventListener("change", function() {
+		const selectedArea = this.value;
+		const selectedIndex = this.selectedIndex; // Get the index of the selected option
+		const parameterValue = selectedIndex +1; // Set parameter value based on the selected index
+		// Update the parameter named 2 in the URL
+		updateUrlParameter("2", parameterValue); // Pass the parameter position (1-based index) and new value
+		queryParams = getQueryParams();
+		updateSunburst();	
+	});
+
 
 	// Attach the toggle function to the checkbox
 	console.log("Attaching toggle function...");
@@ -559,6 +666,10 @@
 		}
 
 	});
+
+	// Attach the randomize function to the button
+	console.log("Attaching randomization function...");
+    document.getElementById('randomizeButton').addEventListener('click', randomizeWeights);
 	
 </script>
 
