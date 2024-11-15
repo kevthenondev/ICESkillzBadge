@@ -68,6 +68,15 @@
 			margin-top: 20px;
 			border-collapse: collapse;
 		}
+		
+		/* Make the table header sticky */
+		#tasksTable thead th {
+			position: sticky;
+			top: 0; /* Stick to the top of the viewport */
+			background-color: #f2f2f2; /* Ensure a visible background */
+			z-index: 1; /* Ensure it stays above table rows */
+			border: 1px solid #ddd; /* Optional: match the table's styling */
+		}
     </style>
 </head>
 <body>
