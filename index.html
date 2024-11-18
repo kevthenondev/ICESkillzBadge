@@ -45,7 +45,10 @@
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 0px;
+			padding-left: 5px;
+			padding-right: 5px;
+			padding-top: 0px;
+			padding-bottom: 0px;			
             text-align: left;
         }
         th {
@@ -68,7 +71,12 @@
 			margin-top: 20px;
 			border-collapse: collapse;
 		}
-		
+
+		#tasksTable th, #tasksTable td {
+			padding-left: 5px;
+			padding-right: 5px;
+		}		
+
 		/* Make the table header sticky */
 		#tasksTable thead th {
 			position: sticky;
@@ -147,128 +155,162 @@
 			<tr>
 			  <th>Task</th>
 			  <th>Description</th>
+			  <th style="display: none;">ICE</th> <!-- Hidden column -->
+			  <th style="display: none;">Innovation</th> <!-- Hidden column -->
+			  <th style="display: none;">Commercialisation</th> <!-- Hidden column -->
+			  <th style="display: none;">Entrepreneurship</th> <!-- Hidden column -->
 			</tr>
 		  </thead>
 		  <tbody>
 			<tr id="Administration">
 			  <td>Administration</td>
 			  <td>Overseeing and coordinating various administrative tasks such as managing office supplies, scheduling meetings and maintaining records within an organisation to ensure smooth operations and efficient workflows.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Business case development">
 			  <td>Business case development</td>
 			  <td>Crafting a detailed rationale and justification for a proposed business initiative, including analysis of potential benefits, risks, and financial implications.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Change management">
 			  <td>Change management</td>
 			  <td>Managing the process of transitioning individuals, teams, and organisations from the current state to a desired future state, while minimising resistance and maximising adoption of new practices or initiatives.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Customer service">
 			  <td>Customer service</td>
 			  <td>Providing assistance to customers before, during, and after their purchase. It includes activities like answering inquiries, providing product information, and resolving issues to ensure a positive customer experience and foster loyalty.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Delivery design">
 			  <td>Delivery design</td>
 			  <td>The planning and implementation of how a product or service is distributed and made accessible to the market.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Feasibility analysis">
 			  <td>Feasibility analysis</td>
 			  <td>Assessing the viability and potential success of a proposed project or initiative by analysing factors such as market demand, resource availability, technical feasibility, and financial sustainability.</td>
+			<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Financial management">
 			  <td>Financial management</td>
 			  <td>Planning, monitoring, and controlling an organisation's financial resources to optimise profitability, liquidity, and overall financial health.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Funding">
 			  <td>Funding</td>
 			  <td>Securing the necessary capital or funding required to support business operations, expansion, or investment in new ventures through various financing options or fundraising strategies.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Human resource management">
 			  <td>Human resource management</td>
 			  <td>Managing the recruitment, training, development, and retention of employees to align with organisational goals and foster a productive and engaged workforce.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Idea generation">
 			  <td>Idea generation</td>
 			  <td>Creating and producing new and innovative ideas to solve problems or meet needs.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>
 			</tr>
 			<tr id="IP Protection">
 			  <td>IP Protection</td>
 			  <td>Identifying and securing the rights to any potential patents, trademarks, copyrights and trade secrets related to the venture.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Knowledge management">
 			  <td>Knowledge management</td>
 			  <td>Implementing processes, systems and strategies to leverage and safeguard organisational knowledge and expertise.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Market positioning">
 			  <td>Market positioning</td>
 			  <td>Creating a unique image and identity for the offering that fits the requirements of a targeted market in terms of price and place, and sets the offering apart from competitors.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Market research">
 			  <td>Market research</td>
 			  <td>Conducting systematic investigations and analysis of market trends, consumer preferences, competitor activities, and industry dynamics to inform strategic decision-making and marketing efforts.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Operations management">
 			  <td>Operations management</td>
 			  <td>Overseeing the day-to-day operations, resource, supply chain and production processes of a business to ensure efficiency, quality, and compliance with organisational standards and objectives.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Opportunity identification">
 			  <td>Opportunity identification</td>
 			  <td>Recognising and capitalising on emerging trends, market gaps, or untapped opportunities.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Organisational development">
 			  <td>Organisational development</td>
 			  <td>Improving and transforming an organisation’s structure, processes, culture and capabilities to enhance effectiveness.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Product / process / service design">
 			  <td>Product / process / service design</td>
 			  <td>Identifying and enhancing functional and aesthetic aspects of a product to meet customer needs, market demands, production considerations, and regulatory requirements.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>
 			</tr>
 			<tr id="Product / process / service development">
 			  <td>Product / process / service development</td>
 			  <td>Developing the product to meet the design specification.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Production">
 			  <td>Production</td>
 			  <td>Designing and optimising the processes and workflows involved in manufacturing products or services to maximise efficiency, quality, and cost-effectiveness.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Project management">
 			  <td>Project management</td>
 			  <td>Planning, executing, controlling and socialising projects from initiation to completion, ensuring that deliverables are achieved on time, within budget, and to the desired quality standards.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>
 			</tr>
 			<tr id="Promotion">
 			  <td>Promotion</td>
 			  <td>Planning and executing promotional activities, advertising campaigns, and branding initiatives to attract, engage, and retain customers and enhance brand visibility and reputation.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Prototyping">
 			  <td>Prototyping</td>
 			  <td>Creating preliminary models, to validate design concepts, gather feedback, and iteratively refine through testing and evaluation.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>
 			</tr>
 			<tr id="Research">
 			  <td>Research</td>
 			  <td>Conducting systematic investigations, studies, or experiments to gather information, generate insights, or test hypotheses related to specific business challenges or opportunities.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>
 			</tr>
 			<tr id="Risk management">
 			  <td>Risk management</td>
 			  <td>Identifying, analysing, and mitigating potential risks and uncertainties that could impact the achievement of organisational objectives.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Sales">
 			  <td>Sales</td>
 			  <td>Introducing a new product or service to the market and implementing sales strategies to drive revenue and achieve business objectives.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Stakeholder management">
 			  <td>Stakeholder management</td>
 			  <td>Identifying and maintaining relationships, as well as managing expectations with groups interested or affected by the venture.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Strategic management">
 			  <td>Strategic management</td>
 			  <td>Developing and implementing strategies to differentiate and position an organisation, product, or brand effectively within the marketplace to gain competitive advantage and achieve strategic goals.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 			<tr id="Testing">
 			  <td>Testing</td>
 			  <td>Conducting tests, experiments, or trials to evaluate the performance, functionality, or usability of products, processes, or systems and identify areas for improvement or refinement.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>
 			</tr>
 			<tr id="Vision socialisation">
 			  <td>Vision socialisation</td>
 			  <td>Communicating and aligning the vision for an innovation with stakeholders including colleagues, customers, investors and partners.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
 			</tr>
 		  </tbody>
 	</table>
@@ -276,7 +318,7 @@
 <script>
 	// Table containing predefined skill combinations
 	var queryParams = getQueryParams();
-	console.log("Here are the params returned from the function: "+queryParams);
+	//console.log("Here are the params returned from the function: "+queryParams);
 	
 	const skillCombinations = {
 		leadership:[10,20,30,40,50,60,70,80,90,100,10,20,30,40,50,60,70,80,90,100,10,20,30,40,50,60,70,80,90,100],
@@ -455,6 +497,36 @@
 		}
 	}
 
+    function filterTaskTable() {
+		console.log("Entering filterTaskTable function...");        
+		// Get the selected area of interest
+		const taskTable = document.getElementById("tasksTable");
+		const areaOfInterest = queryParams[2] ? Number(queryParams[2]) : 1;
+		//console.log("Filtering taskTable for areaOfInterest:", areaOfInterest);
+
+        // Map dropdown values to column indices
+        const columnMap = {
+            1: 2, // Column index for ICE
+            2: 3,
+            3: 4,
+            4: 5,
+        };
+
+        // Determine the relevant column index
+        const columnIndex = columnMap[areaOfInterest];
+
+        // Filter rows based on the hidden column's value
+        const rows = taskTable.querySelectorAll("tbody tr");
+        rows.forEach(row => {
+            const relevantCell = row.cells[columnIndex];
+            if (relevantCell && relevantCell.textContent.trim() === "TRUE") {
+                row.style.display = ""; // Show relevant rows
+            } else {
+                row.style.display = "none"; // Hide irrelevant rows
+            }
+        });
+    }
+
 	// Function to update a specific parameter in the URL
 	function updateUrlParameter(paramIndex, paramValue) {
 		const url = new URL(window.location.href); // Get the current URL
@@ -477,8 +549,8 @@
         var pair = vars[i].split("=");
         params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
       }
-	  console.log("Here are the parameters passed: "+params);
-	  console.log("Here are the parameters passed: "+params[decodeURIComponent(pair[0])]);
+	  //console.log("Here are the parameters passed: "+params);
+	  //console.log("Here are the parameters passed: "+params[decodeURIComponent(pair[0])]);
       return params;
     }
 	
@@ -605,9 +677,9 @@
         d3.select("#sunburst").selectAll("*").remove(); // Clear existing content
 
         // Get the value of the specified column heading
-        console.log("Area: "+queryParams[2]);
+        //console.log("Area: "+queryParams[2]);
         const areaOfInterest = queryParams[2] ? Number(queryParams[2]) : 1;
-		console.log("areaOfInterest: "+areaOfInterest);
+		//console.log("areaOfInterest: "+areaOfInterest);
 
         const width = 750;  // Increase the width
         const height = 750; // Increase the height
@@ -656,10 +728,10 @@
         } else if (areaOfInterest === 2) {
             areaLabel = "Innovation";
             // Light turquoise to dark turquoise
-			console.log("setting turquoise colorScale: "+colorScale);
+			//console.log("setting turquoise colorScale: "+colorScale);
             colorScale = d3.scaleSequential(d3.interpolate("#ccffff", "#008B8B"))
 						.domain([minWeight, upperBound]);
-			console.log("set turquoise colorScale: "+colorScale);
+			//console.log("set turquoise colorScale: "+colorScale);
         } else if (areaOfInterest === 3) {
             areaLabel = "Commercialisation";
             // Light yellow to dark yellow
@@ -677,10 +749,7 @@
             colorScale = d3.scaleSequential(d3.interpolateGreys)
 						.domain([minWeight, upperBound]);
 		}
-
-
-        console.log("set colorScale: "+colorScale);
-
+        //console.log("set colorScale: "+colorScale);
 
 		svg.selectAll("path")
             .data(root.descendants())
@@ -818,7 +887,7 @@
 			.attr("y", 20) // Adjust y value to position "Framework" below "ICE Skills"
 			.text("Framework");
 
-		console.log("Updating sunburst combi skill label inside rendering");
+		//console.log("Updating sunburst combi skill label inside rendering");
 		// Update the sunburst label with the selected combination name
 		svg.select(".combination-label").remove(); // Remove the old label if it exists
 		selectedCombination = document.getElementById("skillsCombo").value
@@ -1733,7 +1802,9 @@
 		updateUrlParameter("2", parameterValue); // Pass the parameter position (1-based index) and new value
 		queryParams = getQueryParams();
 		updateSunburst();	
+		filterTaskTable();
 	});
+
 
 
 	// Attach the toggle function to the checkbox
@@ -1773,7 +1844,11 @@
 
     // Call the function on page load in case there's already a hash
 	console.log("Attaching highlightTableRow function for DOMContentLoaded...");
-    document.addEventListener("DOMContentLoaded", highlightTableRow);	
+    document.addEventListener("DOMContentLoaded", highlightTableRow);
+
+	//console.log("Filtering the task table on initialisation...");
+	filterTaskTable();
+
 	
 </script>
 
