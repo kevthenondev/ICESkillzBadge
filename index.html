@@ -1933,9 +1933,12 @@
     }
 	//Initial value for the Area dropdown
     const areaDropdown = document.getElementById("areaOfInterest");
-	if (queryParams[2]-1 >= 0 && queryParams[2] < areaDropdown.options.length) {
+	console.log("Checking queryParams: ", queryParams[2]);
+	if (queryParams[2]-1 >= 0 && queryParams[2] <= areaDropdown.options.length) {
+		console.log("Setting areaDropdown to option: ", queryParams[2]-1);
 		areaDropdown.selectedIndex = queryParams[2]-1; // Set the dropdown selection based on index
     } else {
+		console.log("Setting default areaDropdown");
 		areaDropdown.selectedIndex = 0; // Default to the first option if index is out of bounds
     }
 		
