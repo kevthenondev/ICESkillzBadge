@@ -735,12 +735,12 @@
         } else if (areaOfInterest === 3) {
             areaLabel = "Commercialisation";
             // Light yellow to dark yellow
-            colorScale = d3.scaleSequential(d3.interpolateYlOrBr)
+            colorScale = d3.scaleSequential(d3.interpolate("#92ff7e", "#1b9504"))
 						.domain([minWeight, upperBound]);
         } else if (areaOfInterest === 4) {
             areaLabel = "Entrepreneurship";
             // Light green to dark green
-            colorScale = d3.scaleSequential(d3.interpolateGreens)
+            colorScale = d3.scaleSequential(d3.interpolate("#ffd9fe", "#bd0aa7"))
 						.domain([minWeight, upperBound]);
         } else {
             areaLabel = "";
@@ -930,7 +930,7 @@
 
     // Function to create the input and slider fields
     function createSkillComponents() {
-		console.log("Creating skill components");
+		console.log("Creating skill components for the form");
         const tbody = document.getElementById('skillTableBody');
         const values = Object.values(queryParams); // Convert to array for easier indexing
 
