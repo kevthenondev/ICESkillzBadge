@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICE Skills Wheel</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+			flex-direction: column; /* This ensures that everything in the body is stacked vertically */
+			gap: 50px; /* Adds spacing between container and table */
+       }
+        .container {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 20px;
+        }
+		.form-group {
+			margin-left: 5px;
+			margin-bottom: 5px; /* Add space between form groups */
+			}
+        .narrow-input {
+            width: 60px; /* Set to desired width */
+        }
+        h2 {
+            margin-bottom: 10px;
+            text-align: center;
+            width: 100%;
+        }
+        form {
+			margin-left: 5px;
+			margin-top: 20px; /* Add space between form groups */
+            display: flex;
+            flex-direction: column;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+			margin-bottom: 5px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+			padding-left: 5px;
+			padding-right: 5px;
+			padding-top: 0px;
+			padding-bottom: 0px;			
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #sunburst {
+            width: 750px; /* Set width for the sunburst */
+            height: 750px; /* Set height for the sunburst */
+            position: relative;
+			margin-top: 150px;
+        }
+        .sunburst-text {
+            text-anchor: middle; /* Center align text horizontally */
+            overflow: hidden; /* Hide overflow */
+            text-overflow: ellipsis; /* Optional: Show ellipsis for overflowed text */
+		}
+		#tasksTable {
+			width: 50%; /* Or set to a fixed width, like 800px */
+			margin-left: 20px;
+			margin-top: 20px;
+			border-collapse: collapse;
+		}
+
+		#tasksTable th, #tasksTable td {
+			padding-left: 5px;
+			padding-right: 5px;
+		}		
+
+		/* Make the table header sticky */
+		#tasksTable thead th {
+			position: sticky;
+			top: 0; /* Stick to the top of the viewport */
+			background-color: #f2f2f2; /* Ensure a visible background */
+			z-index: 1; /* Ensure it stays above table rows */
+			border: 1px solid #ddd; /* Optional: match the table's styling */
+		}
+    </style>
+</head>
+<body>
+	<div class="container">
+		<div>
+			<h2>Innovation Skills Framework Badge Creator</h2>
+		<!-- Area of Interest Dropdown -->
+		<div class="form-group" id=toggle-max style="display: none;">
+			<label for="areaOfInterest">Area of Interest:</label>
+			<select id="areaOfInterest">
+				<option value="ICE">Innovation, Commercialisation and Entrepreneurship</option>
+				<option value="innovation">Innovation</option>
+				<option value="commercialisation">Commercialisation</option>
+				<option value="entrepreneurship">Entrepreneurship</option>
+			</select>
+		</div>	
+		<div class="form-group" id=toggle-max style="display: none;">
+			<label><input type="checkbox" id="toggleMax" unchecked>Binary (checked) or Scale (unchecked)</label>
+			<!-- Skills Combination Dropdown -->
+		</div>	
+		<div class="form-group" id=skills-combo style="display: none;">
+			<label for="skillsCombo">Skills Combination:</label>
+			<select id="skillsCombo">
+				<option value="custom">Custom Skills Combination</option>
+				<option value="leadership">Leadership</option>
+				<option value="empathy">Empathy</option>
+				<option value="networking">Networking</option>
+				<option value="EntreSpottingOpp">EntreComp: Spotting Opportunities</option>
+				<option value="EntreCreativity">EntreComp: Creativity</option>
+				<option value="EntreVision">EntreComp: Vision</option>
+				<option value="EntreValuingIdeas">EntreComp: Valuing Ideas</option>
+				<option value="EntreEthical">EntreComp: Ethical and Sustainable Thinking</option>
+				<option value="EntreSelf">EntreComp: self awareness and Self-efficacy</option>
+				<option value="EntreMotivation">EntreComp: Motivation and Perseverance</option>
+				<option value="EntreResources">EntreComp: Mobilising Resources</option>
+				<option value="EntreFin">EntreComp: Financial and Economic Literacy</option>
+				<option value="EntrePersuade">EntreComp: Mobilising Others</option>
+				<option value="EntreInitiative">EntreComp: Taking the Initiative</option>
+				<option value="EntrePlanning">EntreComp: Planning and Management</option>
+				<option value="EntreRisk">EntreComp: Coping with Ambiguity, Uncertainty and Risk</option>
+				<option value="EntreTeam">EntreComp: Working with Others</option>
+				<option value="EntreLearning">EntreComp: Learning through Experience</option>
+				<!-- Add more options corresponding to your skill combinations -->
+			</select>
+		</div>	
+			<form id="weightForm">
+				<table>
+					<thead>
+						<tr>
+							<th>Skill Group</th>
+							<th>Skill Component</th>
+							<th>Weight</th>
+						</tr>
+					</thead>
+					<tbody id="skillTableBody">
+						<!-- Dynamic rows will be injected here -->
+					</tbody>
+				</table>
+				<button type="button" id="randomizeButton">Click here to get some random values</button>
+			</form>
+		</div>
+		<div id="sunburst">
+		</div>
+		<button type="button" id="exportButton">Export Skills Badge</button>
+	</div>
+	<table class="task-table" id="tasksTable" style="display: none;">
+		  <thead>
+			<tr>
+			  <th>Task</th>
+			  <th>Description</th>
+			  <th style="display: none;">ICE</th> <!-- Hidden column -->
+			  <th style="display: none;">Innovation</th> <!-- Hidden column -->
+			  <th style="display: none;">Commercialisation</th> <!-- Hidden column -->
+			  <th style="display: none;">Entrepreneurship</th> <!-- Hidden column -->
+			</tr>
+		  </thead>
+		  <tbody>
+			<tr id="Administration">
+			  <td>Administration</td>
+			  <td>Overseeing and coordinating various administrative tasks such as managing office supplies, scheduling meetings and maintaining records within an organisation to ensure smooth operations and efficient workflows.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Business case development">
+			  <td>Business case development</td>
+			  <td>Crafting a detailed rationale and justification for a proposed business initiative, including analysis of potential benefits, risks, and financial implications.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Change management">
+			  <td>Change management</td>
+			  <td>Managing the process of transitioning individuals, teams, and organisations from the current state to a desired future state, while minimising resistance and maximising adoption of new practices or initiatives.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Customer service">
+			  <td>Customer service</td>
+			  <td>Providing assistance to customers before, during, and after their purchase. It includes activities like answering inquiries, providing product information, and resolving issues to ensure a positive customer experience and foster loyalty.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Delivery design">
+			  <td>Delivery design</td>
+			  <td>The planning and implementation of how a product or service is distributed and made accessible to the market.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Feasibility analysis">
+			  <td>Feasibility analysis</td>
+			  <td>Assessing the viability and potential success of a proposed project or initiative by analysing factors such as market demand, resource availability, technical feasibility, and financial sustainability.</td>
+			<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Financial management">
+			  <td>Financial management</td>
+			  <td>Planning, monitoring, and controlling an organisation's financial resources to optimise profitability, liquidity, and overall financial health.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Funding">
+			  <td>Funding</td>
+			  <td>Securing the necessary capital or funding required to support business operations, expansion, or investment in new ventures through various financing options or fundraising strategies.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Human resource management">
+			  <td>Human resource management</td>
+			  <td>Managing the recruitment, training, development, and retention of employees to align with organisational goals and foster a productive and engaged workforce.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Idea generation">
+			  <td>Idea generation</td>
+			  <td>Creating and producing new and innovative ideas to solve problems or meet needs.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>
+			</tr>
+			<tr id="IP Protection">
+			  <td>IP Protection</td>
+			  <td>Identifying and securing the rights to any potential patents, trademarks, copyrights and trade secrets related to the venture.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Knowledge management">
+			  <td>Knowledge management</td>
+			  <td>Implementing processes, systems and strategies to leverage and safeguard organisational knowledge and expertise.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Market positioning">
+			  <td>Market positioning</td>
+			  <td>Creating a unique image and identity for the offering that fits the requirements of a targeted market in terms of price and place, and sets the offering apart from competitors.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Market research">
+			  <td>Market research</td>
+			  <td>Conducting systematic investigations and analysis of market trends, consumer preferences, competitor activities, and industry dynamics to inform strategic decision-making and marketing efforts.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Operations management">
+			  <td>Operations management</td>
+			  <td>Overseeing the day-to-day operations, resource, supply chain and production processes of a business to ensure efficiency, quality, and compliance with organisational standards and objectives.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Opportunity identification">
+			  <td>Opportunity identification</td>
+			  <td>Recognising and capitalising on emerging trends, market gaps, or untapped opportunities.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Organisational development">
+			  <td>Organisational development</td>
+			  <td>Improving and transforming an organisation’s structure, processes, culture and capabilities to enhance effectiveness.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Product / process / service design">
+			  <td>Product / process / service design</td>
+			  <td>Identifying and enhancing functional and aesthetic aspects of a product to meet customer needs, market demands, production considerations, and regulatory requirements.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>
+			</tr>
+			<tr id="Product / process / service development">
+			  <td>Product / process / service development</td>
+			  <td>Developing the product to meet the design specification.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Production">
+			  <td>Production</td>
+			  <td>Designing and optimising the processes and workflows involved in manufacturing products or services to maximise efficiency, quality, and cost-effectiveness.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Project management">
+			  <td>Project management</td>
+			  <td>Planning, executing, controlling and socialising projects from initiation to completion, ensuring that deliverables are achieved on time, within budget, and to the desired quality standards.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>
+			</tr>
+			<tr id="Promotion">
+			  <td>Promotion</td>
+			  <td>Planning and executing promotional activities, advertising campaigns, and branding initiatives to attract, engage, and retain customers and enhance brand visibility and reputation.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Prototyping">
+			  <td>Prototyping</td>
+			  <td>Creating preliminary models, to validate design concepts, gather feedback, and iteratively refine through testing and evaluation.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>
+			</tr>
+			<tr id="Research">
+			  <td>Research</td>
+			  <td>Conducting systematic investigations, studies, or experiments to gather information, generate insights, or test hypotheses related to specific business challenges or opportunities.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>
+			</tr>
+			<tr id="Risk management">
+			  <td>Risk management</td>
+			  <td>Identifying, analysing, and mitigating potential risks and uncertainties that could impact the achievement of organisational objectives.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Sales">
+			  <td>Sales</td>
+			  <td>Introducing a new product or service to the market and implementing sales strategies to drive revenue and achieve business objectives.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Stakeholder management">
+			  <td>Stakeholder management</td>
+			  <td>Identifying and maintaining relationships, as well as managing expectations with groups interested or affected by the venture.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">FALSE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Strategic management">
+			  <td>Strategic management</td>
+			  <td>Developing and implementing strategies to differentiate and position an organisation, product, or brand effectively within the marketplace to gain competitive advantage and achieve strategic goals.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+			<tr id="Testing">
+			  <td>Testing</td>
+			  <td>Conducting tests, experiments, or trials to evaluate the performance, functionality, or usability of products, processes, or systems and identify areas for improvement or refinement.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">FALSE</td>
+			</tr>
+			<tr id="Vision socialisation">
+			  <td>Vision socialisation</td>
+			  <td>Communicating and aligning the vision for an innovation with stakeholders including colleagues, customers, investors and partners.</td>
+			  <td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>	<td style="display: none;">TRUE</td>
+			</tr>
+		  </tbody>
+	</table>
+
+<script>
+	// Table containing predefined skill combinations
+	var queryParams = getQueryParams();
+	//console.log("Here are the params returned from the function: "+queryParams);
+	
+	const skillCombinations = {
+		leadership:[10,20,30,40,50,60,70,80,90,100,10,20,30,40,50,60,70,80,90,100,10,20,30,40,50,60,70,80,90,100],
+		empathy:[5,15,25,35,45,55,65,75,85,95,5,15,25,35,45,55,65,75,85,95,5,15,25,35,45,55,65,75,85,95],
+		networking:[53,62,23,49,88,46,88,45,70,55,4,82,48,79,28,40,58,76,54,54,83,80,15,27,95,18,46,43,97,54],
+		EntreSpottingOpp:[4,32,72,32,44,50,3,69,53,1,22,8,3,97,29,22,32,42,71,80,1,84,81,36,25,75,51,36,52,91],
+		EntreCreativity:[69,44,34,67,45,17,9,83,32,98,39,34,60,82,2,64,64,21,95,42,94,29,79,87,1,22,94,54,51,75],
+		EntreVision:[71,76,25,94,5,57,58,76,6,18,14,9,27,45,50,39,49,80,5,27,79,94,10,24,75,22,50,32,32,22],
+		EntreValuingIdeas:[73,32,23,15,57,27,78,3,87,12,10,28,55,83,87,61,14,66,97,55,98,73,91,97,64,63,95,80,86,22],
+		EntreEthical:[79,96,4,98,57,98,40,42,62,66,3,6,95,69,52,86,86,80,90,72,81,67,35,41,49,53,85,41,90,50],
+		EntreSelf:[2,22,12,31,88,0,0,42,62,66,3,6,95,69,52,86,86,80,90,72,81,67,35,41,49,53,85,41,90,50],		
+		EntreMotivation:[27,21,35,68,44,42,38,69,12,53,58,78,87,84,41,27,88,41,63,10,11,14,85,38,18,79,97,37,63,60],
+		EntreResources:[85,65,27,62,38,48,43,100,78,18,47,95,95,3,39,14,85,43,64,23,32,49,41,55,69,6,35,23,55,27],
+		EntreFin:[23,66,29,73,15,85,7,67,24,14,74,25,53,9,41,22,64,51,7,42,74,31,21,49,53,84,0,5,90,90],
+		EntrePersuade:[40,100,87,83,10,77,57,24,43,34,31,56,5,78,34,91,99,46,87,46,93,13,27,96,92,66,29,91,91,85],
+		EntreInitiative:[64,2,86,56,46,47,60,29,54,41,26,67,24,44,29,24,43,57,47,41,89,62,39,28,49,65,96,80,7,40],
+		EntrePlanning:[59,66,26,58,7,84,54,26,13,58,72,93,5,50,21,77,42,72,56,55,49,10,10,91,91,56,93,55,91,77],
+		EntreRisk:[44,36,55,68,47,23,39,86,85,70,88,55,73,60,23,30,62,87,30,61,74,67,89,71,51,5,45,86,52,61],
+		EntreTeam:[7,22,16,39,14,90,31,64,31,26,92,76,33,57,36,77,98,71,24,58,68,44,5,73,54,62,27,19,18,73],
+		EntreLearning:[43,8,44,84,17,74,82,82,74,85,31,10,92,13,75,82,47,83,70,68,52,10,19,50,15,67,82,32,37,57],
+		// Add other skill combinations
+	};
+
+	// Table of Skill groups and Skill components
+    const data = {
+        description1: "Click skills groups and their components to learn more about them and their related tasks",
+        description2: "Click skills groups and their components to learn more about them and their related tasks",
+        description3: "Click skills groups and their components to learn more about them and their related tasks",
+        description4: "Click skills groups and their components to learn more about them and their related tasks",
+		children: [
+            {
+                name: "Conceptual skills",
+                description1: "Conceptual skills are concerned with the relationship between the abstract and the concrete and that act as the basis for evaluation",
+                description2: "Conceptual skills are concerned with the relationship between the abstract and the concrete and that act as the basis for evaluation",
+                description3: "Conceptual skills are concerned with the relationship between the abstract and the concrete and that act as the basis for evaluation",
+                description4: "Conceptual skills are concerned with the relationship between the abstract and the concrete and that act as the basis for evaluation",
+				children: [
+                    { name: "Abstract thinking", value: 1, description1: "", description2: "", description3: "", description4: ""},
+                    { name: "Creativity", value: 1, description1: "", description2: "", description3: "", description4: ""},
+                    { name: "Mental agility", value: 1, description1: "", description2: "", description3: "", description4: ""},
+                    { name: "Strategic thinking", value: 1, description1: "", description2: "", description3: "", description4: ""},
+                    { name: "Synthesis", value: 1, description1: "", description2: "", description3: "", description4: ""},
+                    { name: "Systems thinking", value: 1, description1: "", description2: "", description3: "", description4: ""}
+                ]
+            },
+            {
+                name: "Critical self reflection",
+                description1: "Intrapersonal skills that underpin the development of positive self-concept as the basis for effective relationships",
+                description2: "Intrapersonal skills that underpin the development of positive self-concept as the basis for effective relationships",
+                description3: "Intrapersonal skills that underpin the development of positive self-concept as the basis for effective relationships",
+                description4: "Intrapersonal skills that underpin the development of positive self-concept as the basis for effective relationships",
+                children: [
+                    { name: "External self awareness", value: 1, description1: "", description2: "", description3: "", description4: ""},
+                    { name: "Internal self awareness", value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Self-regulation", value: 1, description1: "", description2: "", description3: "", description4: "" }
+                ]
+            },
+            {
+                name: "Evaluative skills",
+                description1: "Cognitive skills concerned with the ongoing processing of information as the basis for action",
+                description2: "Cognitive skills concerned with the ongoing processing of information as the basis for action",
+                description3: "Cognitive skills concerned with the ongoing processing of information as the basis for action",
+                description4: "Cognitive skills concerned with the ongoing processing of information as the basis for action",
+                children: [
+                    { name: "Comparative reasoning", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Counterfactual thinking", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Critical analysis", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Decision making", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Environment scanning", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Evidence gathering", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Interpretation", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Pattern recognition", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Problem solving", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" }
+                ]
+            },
+            {
+                name: "Organisational skills",
+                description1: "Technical skills associated with the active planning and undertaking of execution and management",
+                description2: "Technical skills associated with the active planning and undertaking of execution and management",
+                description3: "Technical skills associated with the active planning and undertaking of execution and management",
+                description4: "Technical skills associated with the active planning and undertaking of execution and management",
+                children: [
+                    { name: "Forecasting", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Knowledge brokering", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Modelling", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Organising", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Prioritisation", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" }
+                ]
+            },
+            {
+                name: "Relational skills",
+                description1: "Interpersonal and social skills associated with the effective interaction and management of human resources and stakeholders",
+                description2: "Interpersonal and social skills associated with the effective interaction and management of human resources and stakeholders",
+                description3: "Interpersonal and social skills associated with the effective interaction and management of human resources and stakeholders",
+                description4: "Interpersonal and social skills associated with the effective interaction and management of human resources and stakeholders",
+                children: [
+                    { name: "Active listening", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Collaboration", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Communication", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Delegation", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Feedback", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Influencing", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" },
+                    { name: "Negotiation", value: 1, value: 1, description1: "", description2: "", description3: "", description4: "" }
+                ]
+            }
+        ]
+    };
+
+	function updateDescription(childName, descriptionNumber, text) {
+		// Find the skill group that contains the child
+		//console.log("Starting updateDescription for: "+childName+" description" +descriptionNumber+ " with: "+text);
+		for (const group of data.children) {
+			// Find the skill component by name
+			const skill = group.children.find(child => child.name === childName);
+			if (skill) {
+				// Update the appropriate description
+				skill[`description${descriptionNumber}`] = `${text}<br><br>Tasks:`;
+				//console.log(`Updated description${descriptionNumber} for ${childName}:`, skill[`description${descriptionNumber}`]);
+				//console.log("Updated data", JSON.stringify(data, null, 2));		
+				return;
+			}
+		}
+		console.warn(`Skill component "${childName}" not found.`);
+	}
+
+	function appendToDescription(childName, descriptionNumber, taskName) {
+		// Generate the HTML link to append
+		//console.log("Starting appendToDescription for: "+childName+" description" +descriptionNumber+ " with: "+taskName);
+		const linkHTML = 
+			"<br><a href='#" + encodeURIComponent(taskName) + 
+			"' style='color:blue; text-decoration:underline;'>" + 
+			taskName + 
+			"</a>";
+	
+		// Find the skill group that contains the child
+		for (const group of data.children) {
+			// Find the skill component by name
+			const skill = group.children.find(child => child.name === childName);
+			if (skill) {
+				// Append the link to the appropriate description
+				skill[`description${descriptionNumber}`] = 
+					(skill[`description${descriptionNumber}`] || "") + linkHTML;
+				//console.log(`Appended to description${descriptionNumber} for ${childName}:`, skill[`description${descriptionNumber}`]);
+				//console.log("Updated data", JSON.stringify(data, null, 2));		
+				return;
+			}
+		}
+		console.warn(`Skill component "${childName}" not found.`);
+	}
+
+	// Function to highlight the row corresponding to the anchor in the URL
+	function highlightTableRow() {
+		//console.log("Starting highlightTableRow function");
+		// Clear previous highlights
+		const rows = document.querySelectorAll("#tasksTable tr");
+		rows.forEach(row => {
+			row.style.fontWeight = "";
+			row.style.backgroundColor = "";
+		});
+
+		// Get the current URL's hash
+		const hash = window.location.hash;
+		if (!hash) return; // If no hash, exit the function
+		//console.log("URL hash: ", hash);
+
+		// Decode the hash to handle URL encoding (e.g., %20 becomes a space)
+		const decodedHash = decodeURIComponent(hash.substring(1)); // Remove the '#' at the start
+		//console.log("URL decodedHash: ", decodedHash);
+
+		// Find the matching row by ID
+		const targetRow = document.getElementById(decodedHash);
+		//console.log("URL targetRow: ", targetRow);
+		if (targetRow) {
+			targetRow.style.fontWeight = "bold";
+			targetRow.style.backgroundColor = "#dddddd"; // Highlight color (light yellow)
+		}
+	}
+
+    function filterTaskTable() {
+		console.log("Entering filterTaskTable function...");        
+		// Get the selected area of interest
+		const taskTable = document.getElementById("tasksTable");
+		const areaOfInterest = queryParams[2] ? Number(queryParams[2]) : 1;
+		//console.log("Filtering taskTable for areaOfInterest:", areaOfInterest);
+
+        // Map dropdown values to column indices
+        const columnMap = {
+            1: 2, // Column index for ICE
+            2: 3,
+            3: 4,
+            4: 5,
+        };
+
+        // Determine the relevant column index
+        const columnIndex = columnMap[areaOfInterest];
+
+        // Filter rows based on the hidden column's value
+        const rows = taskTable.querySelectorAll("tbody tr");
+        rows.forEach(row => {
+            const relevantCell = row.cells[columnIndex];
+            if (relevantCell && relevantCell.textContent.trim() === "TRUE") {
+                row.style.display = ""; // Show relevant rows
+            } else {
+                row.style.display = "none"; // Hide irrelevant rows
+            }
+        });
+    }
+
+	// Function to update a specific parameter in the URL
+	function updateUrlParameter(paramIndex, paramValue) {
+		const url = new URL(window.location.href); // Get the current URL
+		const params = new URLSearchParams(url.search); // Get URL parameters
+
+		// Update the specific parameter based on its position (1-based index)
+		params.set(`${paramIndex}`, paramValue); // Replace `param${paramIndex}` with actual parameter name if needed
+
+		// Set the new URL with updated parameters
+		window.history.replaceState({}, '', `${url.pathname}?${params}`);
+		console.log("Updated URL:", `${url.pathname}?${params}`);
+	}
+
+    function getQueryParams() {
+	  console.log("Entering parameter query function");
+      var params = {};
+      var queryString = window.location.search.substring(1);
+      var vars = queryString.split("&");
+      for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+      }
+	  //console.log("Here are the parameters passed: "+params);
+	  //console.log("Here are the parameters passed: "+params[decodeURIComponent(pair[0])]);
+      return params;
+    }
+	
+	// Function to reset toggleMax and run updateMaxValue
+	function resetToggleMax() {
+		console.log("Resetting toggle state");
+		const toggleMax = document.getElementById("toggleMax");
+		toggleMax.checked = false; // Reset toggleMax to off
+		updateMaxValue(); // Call updateMaxValue to apply the toggle change
+	}
+
+	// Function to reset skills combo dropdown
+	function resetSkillsCombination() {
+		console.log("Resetting Skills Combination Dropdown");
+		skillsCombo = document.getElementById("skillsCombo");
+		skillsCombo.value = "custom"; // Reset dropdown to custom
+		updateSunburst();
+	}
+
+	// Function to populate input field weights based on skill combination selection
+	function updateSkillWeights(selectedCombination) {
+		console.log("Updating skill fields");
+		const values = skillCombinations[selectedCombination] || []; // Get the data array for the selected combination
+		for (let i = 1; i <= 30; i++) {
+			document.getElementById(`input${i}`).value = values[i - 1] || 0; // Set the input field to the corresponding value
+			document.getElementById(`slider${i}`).value = values[i - 1] || 0; // Set the slider to the corresponding value
+		}
+		updateSunburst(); // Re-draw the sunburst with updated weights
+	}
+
+	// Function to export the sunburst as an image
+	function exportSunburst() {
+		console.log("Executing export function...");
+		const sunburstElement = document.getElementById("sunburst");
+
+		if (!sunburstElement) {
+			console.error("Sunburst element not found!");
+			return;
+		}
+
+		// Use html2canvas to take a screenshot of the sunburst
+		html2canvas(sunburstElement).then(canvas => {
+			// Create a link element
+			const link = document.createElement('a');
+			link.href = canvas.toDataURL(); // Convert canvas to data URL (PNG format by default)
+			link.download = 'sunburst.png'; // Set the default filename
+
+			// Programmatically click the link to trigger the download
+			link.click();
+		}).catch(err => {
+			console.error("Error capturing sunburst with html2canvas: ", err);
+		});
+	}
+	
+	// Function to update the max value of sliders based on toggle state
+	function updateMaxValue() {
+		console.log("Executing toggle function...");
+		const toggle = document.getElementById("toggleMax");
+		const newMaxValue = toggle.checked ? 1 : 3;
+		const oldMaxValue = toggle.checked ? 3 : 1;
+
+
+		// Update all sliders
+		for (let i = 1; i <= 30; i++) {
+			const slider = document.getElementById(`slider${i}`);
+			const input = document.getElementById(`input${i}`);
+			slider.max = newMaxValue; // Set max based on toggle
+			// If current slider value is greater than new max, reset it to the new max
+			if (slider.value > oldMaxValue / 2) {
+				slider.value = newMaxValue;
+			}
+			else {
+				slider.value = 0;
+			}
+			input.max = newMaxValue; // Set max based on toggle
+			if (input.value > oldMaxValue / 2) {
+				input.value = newMaxValue;
+			}
+			else {
+				input.value = 0;
+			}
+		}
+		updateSunburst(); // Update the sunburst after changing the max value
+	}
+
+    // Function to randomize weights
+    function randomizeWeights() {
+		console.log("Executing randomization function...");
+		const isToggled = document.getElementById('toggleMax').checked;
+        for (let i = 1; i <= 30; i++) {
+			const randomValue = isToggled 
+				? Math.floor(Math.random() * 2)  // Random number between 0 and 100
+				: Math.floor(Math.random() * 4); // Random number between 1 and 10
+            document.getElementById(`input${i}`).value = randomValue; // Set input value
+            document.getElementById(`slider${i}`).value = randomValue; // Set slider value too
+        }
+        resetSkillsCombination();
+		updateSunburst(); // Update the sunburst after randomizing
+    }
+
+    function syncSliderAndInput(sliderId, inputId) {
+		console.log("Syncing slider and input");
+        const slider = document.getElementById(sliderId);
+        const input = document.getElementById(inputId);
+
+        // Update the input field when slider changes
+        slider.addEventListener('input', function() {
+            input.value = slider.value;
+            resetSkillsCombination();
+			updateSunburst();
+        });
+
+        // Update the slider when input field changes
+        input.addEventListener('input', function() {
+            slider.value = input.value;
+			resetSkillsCombination();
+            updateSunburst();
+        });
+    }
+
+    function renderSunburst(weights) {
+		console.log("Rendering sunburst");
+
+        d3.select("#sunburst").selectAll("*").remove(); // Clear existing content
+
+        // Get the value of the specified column heading
+        //console.log("Area: "+queryParams[2]);
+        const areaOfInterest = 2;
+		//console.log("areaOfInterest: "+areaOfInterest);
+
+        const width = 750;  // Increase the width
+        const height = 750; // Increase the height
+
+        const radius = Math.min(width, height) / 2;
+
+        const partition = d3.partition()
+            .size([2 * Math.PI, radius]);
+
+        const root = d3.hierarchy(data)
+            .sum(d => d.value);   // All segments have equal sizes
+
+        partition(root);
+
+        const svg = d3.select("#sunburst")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        const arc = d3.arc()
+            .startAngle(d => d.x0)
+            .endAngle(d => d.x1)
+            .innerRadius(d => d.y0)
+            .outerRadius(d => d.y1);
+			
+		// 1. Get the min and max weights
+		const minWeight = Math.min(...Object.values(weights), 0); // Maximum based on actual weights
+		const maxWeight = Math.max(...Object.values(weights), 1); // Maximum based on actual weights
+
+        // Adjust the domain based on the min and max weights
+        let upperBound = maxWeight;
+        if (maxWeight - 1 <= minWeight) {
+            upperBound = minWeight + 10; // Adjust upper bound if condition is met
+        }
+
+        // Define the color scale based on the area of interest
+        let colorScale;
+		let areaLabel;
+        if (areaOfInterest === 1) {
+            areaLabel = "ICE";
+			// Light blue to dark blue
+            colorScale = d3.scaleSequential(d3.interpolateBlues)
+						.domain([minWeight, upperBound]);
+        } else if (areaOfInterest === 2) {
+            areaLabel = "Innovation";
+            // Light turquoise to dark turquoise
+			//console.log("setting turquoise colorScale: "+colorScale);
+            colorScale = d3.scaleSequential(d3.interpolate("#ccffff", "#008B8B"))
+						.domain([minWeight, upperBound]);
+			//console.log("set turquoise colorScale: "+colorScale);
+        } else if (areaOfInterest === 3) {
+            areaLabel = "Commercialisation";
+            // Light yellow to dark yellow
+            colorScale = d3.scaleSequential(d3.interpolate("#92ff7e", "#1b9504"))
+						.domain([minWeight, upperBound]);
+        } else if (areaOfInterest === 4) {
+            areaLabel = "Entrepreneurship";
+            // Light green to dark green
+            colorScale = d3.scaleSequential(d3.interpolate("#ffd9fe", "#bd0aa7"))
+						.domain([minWeight, upperBound]);
+        } else {
+            areaLabel = "";
+            // Default color scale if none of the conditions are met
+            console.warn("No matching area of interest found. Using default scale.");
+            colorScale = d3.scaleSequential(d3.interpolateGreys)
+						.domain([minWeight, upperBound]);
+		}
+        //console.log("set colorScale: "+colorScale);
+
+		svg.selectAll("path")
+            .data(root.descendants())
+            .enter().append("path")
+            .attr("d", arc)
+            .style("fill", d => {
+                if (d.depth === 0) return "#fff"; // Center is white
+				if (d.depth === 1) {
+					// For groups (depth 1), find the max weight of its components
+					const groupComponents = d.children || [];
+					const groupMaxWeight = Math.max(...groupComponents.map(c => weights[c.data.name] || 0));
+					if (maxWeight === 1) {
+						if (groupMaxWeight === 1) return colorScale(upperBound);
+					}
+					return colorScale(groupMaxWeight); // Color based on max component weight
+				}
+				if (d.depth === 2) {
+					// For components (depth 2), use their specific weight
+					const weight = weights[d.data.name] || 0;
+					if (maxWeight === 1) {
+						if (weight === 1) return colorScale(upperBound);
+					}
+					return colorScale(weight);
+				}
+            })
+            .style("stroke", "#fff")
+			
+			.on("click", function(event, d) {
+				// Remove any existing tooltip
+				d3.select(".tooltip").remove();
+
+				// Create a new tooltip at the clicked location
+				const tooltip = d3.select("body").append("div")
+					.attr("class", "tooltip")
+					.style("position", "absolute")
+					.style("background", "#fff")
+					.style("border", "1px solid #ccc")
+					.style("padding", "10px")
+					.style("box-shadow", "0px 4px 8px rgba(0, 0, 0, 0.2)")
+					.style("font-size", "12px")
+					.style("max-width", "200px")
+					.style("pointer-events", "auto") // Allow text selection inside tooltip
+					.style("left", (event.pageX + 10) + "px")
+					.style("top", (event.pageY + 10) + "px")
+
+					.html(d.data[`description${areaOfInterest}`] || "No description available");
+
+				// Stop click from propagating to the document body (to prevent immediate removal)
+				event.stopPropagation();
+			});
+
+			// Hide tooltip if clicking outside the sunburst
+			d3.select("body").on("click", function() {
+				d3.select(".tooltip").remove();
+			});
+
+		// Render labels
+		svg.selectAll("text")
+			.data(root.descendants())
+			.enter().append("text")
+			.attr("class", "sunburst-text") // Apply the CSS class
+			.attr("transform", d => {
+				const centroid = arc.centroid(d);
+				const x = centroid[0] * 1; // Adjust to fit text in segments
+				const y = centroid[1] * 1; // Adjust to fit text in segments
+				const angle = (d.x0 + d.x1) / 2 * 180 / Math.PI; // Calculate the angle in degrees
+				
+				// Adjust rotation based on position
+				const rotation = (angle > 180 && angle < 360) ? angle + 90 : angle - 90; // Adjust for left-hand side
+
+				return `translate(${x}, ${y}) rotate(${rotation})`; // Center and rotate
+			})
+			.attr("dy", d => d.depth === 1 ? "0.35em" : "0.25em") // Smaller for components
+			//.attr("font-size", d => d.depth === 1 ? "16px" : "10px") // Larger for groups, smaller for components
+
+			.attr("font-size", d => {
+			const text = d.data.name ? d.data.name : ""; // Fallback to empty string if name is not defined
+			const textLength = text.length; // Safe to access length now
+				// Conditional font size adjustment based on string length
+				if (textLength > 18) {
+					return d.depth === 1 ? "12px" : "10px"; // Smaller font for longer names
+				} else {
+					return d.depth === 1 ? "14px" : "11px"; // Default sizes
+				}
+			})
+			.attr("font-weight", "bold") // Set font weight to bold
+
+			.attr("fill", d => {
+				const weight = weights[d.data.name] || 0; // Get the weight for the skill component
+
+		if (d.depth === 1) {
+			// Calculate maximum weight of components in the group
+			const groupComponents = root.descendants().filter(child => child.depth === 2 && child.parent === d);
+			const groupMaxWeight = Math.max(...groupComponents.map(c => weights[c.data.name] || 0));
+			
+			// Set color based on groupMaxWeight
+			if (maxWeight === 1) return (groupMaxWeight === 0) ? "black" : "white"; // Adjust color based on max weight 
+			
+			return (groupMaxWeight === 0 || groupMaxWeight === 1 || groupMaxWeight < 0.2 * maxWeight) ? "black" : "white"; // Adjust color based on max weight
+		}
+
+		if (maxWeight === 1) return (weight === 0) ? "black" : "white"; // Adjust color based on max weight 
+		return (weight === 0 || weight === 1 || weight < 0.2 * maxWeight) ? "black" : "white"; // Set text color to white if < 20% of max weight
+			})
+		.text(d => d.data.name);
+		
+		const fontSize = areaLabel.length > 10 ? "24px" : "36px";
+		// Add "ICE" text in the center
+		svg.append("text")
+			.attr("class", "sunburst-text")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central") // Center the text vertically
+			.attr("font-size", fontSize)
+			.attr("fill", "black") // You can change the color as needed
+			.attr("y", -60) // Adjust y value to position "Framework" below "ICE Skills"
+			.text(areaLabel);
+
+		// Add "Skills" text in the center
+		svg.append("text")
+			.attr("class", "sunburst-text")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central") // Center the text vertically
+			.attr("font-size", "36px")
+			.attr("fill", "black") // You can change the color as needed
+			.attr("y", -20) // Adjust y value to position "Framework" below "ICE Skills"
+			.text("Skills");
+
+		// Add "Framework" text beneath "ICE Skills"
+		svg.append("text")
+			.attr("class", "sunburst-text")
+			.attr("text-anchor", "middle")
+			.attr("dominant-baseline", "central") // Center the text vertically
+			.attr("font-size", "36px")
+			.attr("fill", "black") // You can change the color as needed
+			.attr("y", 20) // Adjust y value to position "Framework" below "ICE Skills"
+			.text("Framework");
+
+		//console.log("Updating sunburst combi skill label inside rendering");
+		// Update the sunburst label with the selected combination name
+		svg.select(".combination-label").remove(); // Remove the old label if it exists
+		selectedCombination = document.getElementById("skillsCombo").value
+		if (selectedCombination === "custom") {selectedCombination = ""}
+		svg.append("text")
+			.attr("class", "combination-label")
+			.attr("text-anchor", "middle")
+			.attr("font-size", "24px")
+			.attr("y", 70) // Position the label beneath "ICE Skills Framework"
+			.text(selectedCombination.charAt(0).toUpperCase() + selectedCombination.slice(1)); // Capitalize the first letter
+			
+	}
+
+    function updateSunburst() {
+		console.log("Updating sunburst");
+        const form = document.getElementById("weightForm");
+        const weights = Array.from(form.elements).reduce((acc, input) => {
+            if (input.name.startsWith("weight")) {
+                const index = +input.name.replace("weight", ""); // Get the index from "weightX"
+                const skillName = getSkillNameByIndex(index); // Map to the actual skill name
+                acc[skillName] = +input.value; // Store weight for the corresponding skill name
+            }
+            return acc;
+        }, {});
+
+        renderSunburst(weights);
+    }
+
+    // Helper function to map weight indices to actual skill names
+    function getSkillNameByIndex(index) {
+		console.log("Getting skill name by index");
+        // Flatten the skills into a single array
+        const skillMapping = data.children.reduce((acc, group) => {
+            const groupSkills = group.children.map(skill => skill.name);
+            return acc.concat(groupSkills);
+        }, []);
+
+        return skillMapping[index - 1]; // Subtract 1 because the form input names start from "weight1"
+    }
+
+    // Function to create the input and slider fields
+    function createSkillComponents() {
+		console.log("Creating skill components for the form");
+        const tbody = document.getElementById('skillTableBody');
+        const values = Object.values(queryParams); // Convert to array for easier indexing
+
+		let inputIndex = 1; // Start numbering from 1
+
+        data.children.forEach(group => {
+            const groupRowCount = group.children.length;
+
+            // Create rows for each skill component
+            group.children.forEach((component, index) => {
+                const row = document.createElement('tr');
+
+				// Get the appropriate value from queryParams based on the index
+				const inputValue = values[inputIndex] ? Number(values[inputIndex]) : component.value; // Fallback to default value
+
+                // If it's the first child of the group, add the group name
+                if (index === 0) {
+					row.innerHTML = `<td rowspan="${groupRowCount}">${group.name}</td>`;
+				}
+
+                // Skill Component Name
+                row.innerHTML += `<td>${component.name}</td>`;
+
+                // Input and Slider
+                row.innerHTML += `
+                    <td>
+                        <input type="number" id="input${inputIndex}" name="weight${inputIndex}" min="0" max="3" value="${inputValue}" class="narrow-input" required onchange="updateSunburst()">
+                        <input type="range" id="slider${inputIndex}" min="0" max="3" value="${inputValue}" class="narrow-input" onchange="updateSunburst()">
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+                inputIndex++; // Increment the input index
+            });
+        });
+    }
+
+	//start by updating the data descriptions
+	console.log("Updating data...");
+	updateDescription("Abstract thinking", 1, "Understands abstract (non-physical) concepts and can apply them productively.");
+	updateDescription("Creativity", 1, "Draws on available resources to turn ideas into practical solutions to problems or challenges.");
+	updateDescription("Mental agility", 1, "Flexibly responds to changing circumstances by moving quickly between different ideas and foci.");
+	updateDescription("Strategic thinking", 1, "Evaluates and anticipates threats and vulnerabilities to protect advantage and pursue value-creating opportunities.");
+	updateDescription("Synthesis", 1, "Integrates information from multiple sources to formulate conclusions as the basis for action.");
+	updateDescription("Systems thinking", 1, "Makes evidence-based connections between multiple inputs in a scenario and infer the determinants of identified outputs.");
+	updateDescription("Self-regulation", 1, "Understands and manages one’s emotions and behavioural responses to external stimuli.");
+	updateDescription("External self awareness", 1, "Understands how others’ view one’s values, aspirations, thoughts, feelings, behaviours, strengths, and weaknesses.");
+	updateDescription("Internal self awareness", 1, "Understands one’s own values, aspirations, thoughts, feelings, behaviours, strengths, and weaknesses, biases and their impact on others.");
+	updateDescription("Comparative reasoning", 1, "Draws on evidence and prior experience to compare entities or outcomes as the basis for interpretation and explanation.");
+	updateDescription("Counterfactual thinking", 1, "Imagining alternative pasts or futures to understand causality.");
+	updateDescription("Critical analysis", 1, "Draws on available evidence to challenge assumptions and produce well-reasoned analysis and understanding that lead to new ideas, applications, and questions.");
+	updateDescription("Decision making", 1, "Draws on available credible evidence to determine an appropriate course of action in pursuit of a defined objective or goal.");
+	updateDescription("Environment scanning", 1, "Continually monitors and evaluates activity in the internal and external environment that bear on the current and future success of an organisation or initiative.");
+	updateDescription("Evidence gathering", 1, "Searches, locates, generates, collects, extracts, and/or organises information that is relevant to a particular concern.");
+	updateDescription("Interpretation", 1, "Assesses and identifies the relative significance of information, data, or explanation.");
+	updateDescription("Pattern recognition", 1, "Recognises emotional, intellectual, and physical patterns to identify and articulate how they logically connect and to predict future connections.");
+	updateDescription("Problem solving", 1, "Applies a range of cognitive approaches to define and diagnose the cause of problems, and conceptualise and implement a selected solution.");
+	updateDescription("Forecasting", 1, "Draws upon past and current data to predict the likelihood of a future scenario.");
+	updateDescription("Knowledge brokering", 1, "Purposefully and judiciously collects, assesses, organises, extracts, and shares informational assets to maximise their productive value.");
+	updateDescription("Modelling", 1, "Discerns the relationship between relevant variables to understand, define, quantify, visualise or simulate these relationships (for experimentation or forecasting).");
+	updateDescription("Organising", 1, "Purposefully initiates plans and structures to coordinate activities and achieve desired outcomes.");
+	updateDescription("Prioritisation", 1, "Assesses the relative importance of tasks and actions to ensure their timely completion.");
+	updateDescription("Active listening", 1, "Attentively receives and engages with communicated content to generate insights which improve mutual understanding.");
+	updateDescription("Collaboration", 1, "Working effectively with others towards shared goals");
+	updateDescription("Communication", 1, "Effectively conveys messages and their meaning employing a variety of media and modes appropriate to the intended audience.");
+	updateDescription("Delegation", 1, "Equitably transfers and distributes tasks and responsibilities to appropriate others to better achieve desired results.");
+	updateDescription("Feedback", 1, "Provides timely, unambiguous, and constructive guidance to others in a way that leads to enhanced performance or added value.");
+	updateDescription("Influencing", 1, "Affects the behaviour and attitudes of others through persuasion and conviction.");
+	updateDescription("Negotiation", 1, "Engages in dialogue with others that enables the positive resolution of difference or conflict.");
+
+	updateDescription("Abstract thinking", 2, "Understands abstract (non-physical) concepts and can apply them productively.");
+	updateDescription("Creativity", 2, "Draws on available resources to turn ideas into practical solutions to problems or challenges.");
+	updateDescription("Mental agility", 2, "Flexibly responds to changing circumstances by moving quickly between different ideas and foci.");
+	updateDescription("Strategic thinking", 2, "Evaluates and anticipates threats and vulnerabilities to protect advantage and pursue value-creating opportunities.");
+	updateDescription("Synthesis", 2, "Integrates information from multiple sources to formulate conclusions as the basis for action.");
+	updateDescription("Systems thinking", 2, "Makes evidence-based connections between multiple inputs in a scenario and infer the determinants of identified outputs.");
+	updateDescription("Self-regulation", 2, "Understands and manages one’s emotions and behavioural responses to external stimuli.");
+	updateDescription("External self awareness", 2, "Understands how others’ view one’s values, aspirations, thoughts, feelings, behaviours, strengths, and weaknesses.");
+	updateDescription("Internal self awareness", 2, "Understands one’s own values, aspirations, thoughts, feelings, behaviours, strengths, and weaknesses, biases and their impact on others.");
+	updateDescription("Comparative reasoning", 2, "Draws on evidence and prior experience to compare entities or outcomes as the basis for interpretation and explanation.");
+	updateDescription("Counterfactual thinking", 2, "Imagining alternative pasts or futures to understand causality.");
+	updateDescription("Critical analysis", 2, "Draws on available evidence to challenge assumptions and produce well-reasoned analysis and understanding that lead to new ideas, applications, and questions.");
+	updateDescription("Decision making", 2, "Draws on available credible evidence to determine an appropriate course of action in pursuit of a defined objective or goal.");
+	updateDescription("Environment scanning", 2, "Continually monitors and evaluates activity in the internal and external environment that bear on the current and future success of an organisation or initiative.");
+	updateDescription("Evidence gathering", 2, "Searches, locates, generates, collects, extracts, and/or organises information that is relevant to a particular concern.");
+	updateDescription("Interpretation", 2, "Assesses and identifies the relative significance of information, data, or explanation.");
+	updateDescription("Pattern recognition", 2, "Recognises emotional, intellectual, and physical patterns to identify and articulate how they logically connect and to predict future connections.");
+	updateDescription("Problem solving", 2, "Applies a range of cognitive approaches to define and diagnose the cause of problems, and conceptualise and implement a selected solution.");
+	updateDescription("Forecasting", 2, "Draws upon past and current data to predict the likelihood of a future scenario.");
+	updateDescription("Knowledge brokering", 2, "Purposefully and judiciously collects, assesses, organises, extracts, and shares informational assets to maximise their productive value.");
+	updateDescription("Modelling", 2, "Discerns the relationship between relevant variables to understand, define, quantify, visualise or simulate these relationships (for experimentation or forecasting).");
+	updateDescription("Organising", 2, "Purposefully initiates plans and structures to coordinate activities and achieve desired outcomes.");
+	updateDescription("Prioritisation", 2, "Assesses the relative importance of tasks and actions to ensure their timely completion.");
+	updateDescription("Active listening", 2, "Attentively receives and engages with communicated content to generate insights which improve mutual understanding.");
+	updateDescription("Collaboration", 2, "Working effectively with others towards shared goals");
+	updateDescription("Communication", 2, "Effectively conveys messages and their meaning employing a variety of media and modes appropriate to the intended audience.");
+	updateDescription("Delegation", 2, "Equitably transfers and distributes tasks and responsibilities to appropriate others to better achieve desired results.");
+	updateDescription("Feedback", 2, "Provides timely, unambiguous, and constructive guidance to others in a way that leads to enhanced performance or added value.");
+	updateDescription("Influencing", 2, "Affects the behaviour and attitudes of others through persuasion and conviction.");
+	updateDescription("Negotiation", 2, "Engages in dialogue with others that enables the positive resolution of difference or conflict.");
+	updateDescription("Abstract thinking", 3, "Understands abstract (non-physical) concepts and can apply them productively.");
+	updateDescription("Creativity", 3, "Draws on available resources to turn ideas into practical solutions to problems or challenges.");
+	updateDescription("Mental agility", 3, "Flexibly responds to changing circumstances by moving quickly between different ideas and foci.");
+	updateDescription("Strategic thinking", 3, "Evaluates and anticipates threats and vulnerabilities to protect advantage and pursue value-creating opportunities.");
+	updateDescription("Synthesis", 3, "Integrates information from multiple sources to formulate conclusions as the basis for action.");
+	updateDescription("Systems thinking", 3, "Makes evidence-based connections between multiple inputs in a scenario and infer the determinants of identified outputs.");
+	updateDescription("Self-regulation", 3, "Understands and manages one’s emotions and behavioural responses to external stimuli.");
+	updateDescription("External self awareness", 3, "Understands how others’ view one’s values, aspirations, thoughts, feelings, behaviours, strengths, and weaknesses.");
+	updateDescription("Internal self awareness", 3, "Understands one’s own values, aspirations, thoughts, feelings, behaviours, strengths, and weaknesses, biases and their impact on others.");
+	updateDescription("Comparative reasoning", 3, "Draws on evidence and prior experience to compare entities or outcomes as the basis for interpretation and explanation.");
+	updateDescription("Counterfactual thinking", 3, "Imagining alternative pasts or futures to understand causality.");
+	updateDescription("Critical analysis", 3, "Draws on available evidence to challenge assumptions and produce well-reasoned analysis and understanding that lead to new ideas, applications, and questions.");
+	updateDescription("Decision making", 3, "Draws on available credible evidence to determine an appropriate course of action in pursuit of a defined objective or goal.");
+	updateDescription("Environment scanning", 3, "Continually monitors and evaluates activity in the internal and external environment that bear on the current and future success of an organisation or initiative.");
+	updateDescription("Evidence gathering", 3, "Searches, locates, generates, collects, extracts, and/or organises information that is relevant to a particular concern.");
+	updateDescription("Interpretation", 3, "Assesses and identifies the relative significance of information, data, or explanation.");
+	updateDescription("Pattern recognition", 3, "Recognises emotional, intellectual, and physical patterns to identify and articulate how they logically connect and to predict future connections.");
+	updateDescription("Problem solving", 3, "Applies a range of cognitive approaches to define and diagnose the cause of problems, and conceptualise and implement a selected solution.");
+	updateDescription("Forecasting", 3, "Draws upon past and current data to predict the likelihood of a future scenario.");
+	updateDescription("Knowledge brokering", 3, "Purposefully and judiciously collects, assesses, organises, extracts, and shares informational assets to maximise their productive value.");
+	updateDescription("Modelling", 3, "Discerns the relationship between relevant variables to understand, define, quantify, visualise or simulate these relationships (for experimentation or forecasting).");
+	updateDescription("Organising", 3, "Purposefully initiates plans and structures to coordinate activities and achieve desired outcomes.");
+	updateDescription("Prioritisation", 3, "Assesses the relative importance of tasks and actions to ensure their timely completion.");
+	updateDescription("Active listening", 3, "Attentively receives and engages with communicated content to generate insights which improve mutual understanding.");
+	updateDescription("Collaboration", 3, "Working effectively with others towards shared goals");
+	updateDescription("Communication", 3, "Effectively conveys messages and their meaning employing a variety of media and modes appropriate to the intended audience.");
+	updateDescription("Delegation", 3, "Equitably transfers and distributes tasks and responsibilities to appropriate others to better achieve desired results.");
+	updateDescription("Feedback", 3, "Provides timely, unambiguous, and constructive guidance to others in a way that leads to enhanced performance or added value.");
+	updateDescription("Influencing", 3, "Affects the behaviour and attitudes of others through persuasion and conviction.");
+	updateDescription("Negotiation", 3, "Engages in dialogue with others that enables the positive resolution of difference or conflict.");
+	updateDescription("Abstract thinking", 4, "Understands abstract (non-physical) concepts and can apply them productively.");
+	updateDescription("Creativity", 4, "Draws on available resources to turn ideas into practical solutions to problems or challenges.");
+	updateDescription("Mental agility", 4, "Flexibly responds to changing circumstances by moving quickly between different ideas and foci.");
+	updateDescription("Strategic thinking", 4, "Evaluates and anticipates threats and vulnerabilities to protect advantage and pursue value-creating opportunities.");
+	updateDescription("Synthesis", 4, "Integrates information from multiple sources to formulate conclusions as the basis for action.");
+	updateDescription("Systems thinking", 4, "Makes evidence-based connections between multiple inputs in a scenario and infer the determinants of identified outputs.");
+	updateDescription("Self-regulation", 4, "Understands and manages one’s emotions and behavioural responses to external stimuli.");
+	updateDescription("External self awareness", 4, "Understands how others’ view one’s values, aspirations, thoughts, feelings, behaviours, strengths, and weaknesses.");
+	updateDescription("Internal self awareness", 4, "Understands one’s own values, aspirations, thoughts, feelings, behaviours, strengths, and weaknesses, biases and their impact on others.");
+	updateDescription("Comparative reasoning", 4, "Draws on evidence and prior experience to compare entities or outcomes as the basis for interpretation and explanation.");
+	updateDescription("Counterfactual thinking", 4, "Imagining alternative pasts or futures to understand causality.");
+	updateDescription("Critical analysis", 4, "Draws on available evidence to challenge assumptions and produce well-reasoned analysis and understanding that lead to new ideas, applications, and questions.");
+	updateDescription("Decision making", 4, "Draws on available credible evidence to determine an appropriate course of action in pursuit of a defined objective or goal.");
+	updateDescription("Environment scanning", 4, "Continually monitors and evaluates activity in the internal and external environment that bear on the current and future success of an organisation or initiative.");
+	updateDescription("Evidence gathering", 4, "Searches, locates, generates, collects, extracts, and/or organises information that is relevant to a particular concern.");
+	updateDescription("Interpretation", 4, "Assesses and identifies the relative significance of information, data, or explanation.");
+	updateDescription("Pattern recognition", 4, "Recognises emotional, intellectual, and physical patterns to identify and articulate how they logically connect and to predict future connections.");
+	updateDescription("Problem solving", 4, "Applies a range of cognitive approaches to define and diagnose the cause of problems, and conceptualise and implement a selected solution.");
+	updateDescription("Forecasting", 4, "Draws upon past and current data to predict the likelihood of a future scenario.");
+	updateDescription("Knowledge brokering", 4, "Purposefully and judiciously collects, assesses, organises, extracts, and shares informational assets to maximise their productive value.");
+	updateDescription("Modelling", 4, "Discerns the relationship between relevant variables to understand, define, quantify, visualise or simulate these relationships (for experimentation or forecasting).");
+	updateDescription("Organising", 4, "Purposefully initiates plans and structures to coordinate activities and achieve desired outcomes.");
+	updateDescription("Prioritisation", 4, "Assesses the relative importance of tasks and actions to ensure their timely completion.");
+	updateDescription("Active listening", 4, "Attentively receives and engages with communicated content to generate insights which improve mutual understanding.");
+	updateDescription("Collaboration", 4, "Working effectively with others towards shared goals");
+	updateDescription("Communication", 4, "Effectively conveys messages and their meaning employing a variety of media and modes appropriate to the intended audience.");
+	updateDescription("Delegation", 4, "Equitably transfers and distributes tasks and responsibilities to appropriate others to better achieve desired results.");
+	updateDescription("Feedback", 4, "Provides timely, unambiguous, and constructive guidance to others in a way that leads to enhanced performance or added value.");
+	updateDescription("Influencing", 4, "Affects the behaviour and attitudes of others through persuasion and conviction.");
+	updateDescription("Negotiation", 4, "Engages in dialogue with others that enables the positive resolution of difference or conflict.");
+
+	
+	//updating desc1 tasks
+	appendToDescription("Abstract thinking", 1, "Business case development");
+	appendToDescription("Abstract thinking", 1, "Idea generation");
+	appendToDescription("Abstract thinking", 1, "Market positioning");
+	appendToDescription("Abstract thinking", 1, "Opportunity identification");
+	appendToDescription("Abstract thinking", 1, "Organisational development");
+	appendToDescription("Abstract thinking", 1, "Product / process / service design");
+	appendToDescription("Abstract thinking", 1, "Promotion");
+	appendToDescription("Abstract thinking", 1, "Prototyping");
+	appendToDescription("Abstract thinking", 1, "Risk management");
+	appendToDescription("Abstract thinking", 1, "Strategic management");
+	appendToDescription("Creativity", 1, "Business case development");
+	appendToDescription("Creativity", 1, "Funding");
+	appendToDescription("Creativity", 1, "Idea generation");
+	appendToDescription("Creativity", 1, "Market positioning");
+	appendToDescription("Creativity", 1, "Organisational development");
+	appendToDescription("Creativity", 1, "Product / process / service design");
+	appendToDescription("Creativity", 1, "Product / process / service development");
+	appendToDescription("Creativity", 1, "Promotion");
+	appendToDescription("Creativity", 1, "Strategic management");
+	appendToDescription("Mental agility", 1, "Business case development");
+	appendToDescription("Mental agility", 1, "Change management");
+	appendToDescription("Mental agility", 1, "Delivery design");
+	appendToDescription("Mental agility", 1, "Funding");
+	appendToDescription("Mental agility", 1, "Idea generation");
+	appendToDescription("Mental agility", 1, "Operations management");
+	appendToDescription("Mental agility", 1, "Opportunity identification");
+	appendToDescription("Mental agility", 1, "Organisational development");
+	appendToDescription("Mental agility", 1, "Product / process / service design");
+	appendToDescription("Mental agility", 1, "Production");
+	appendToDescription("Mental agility", 1, "Risk management");
+	appendToDescription("Mental agility", 1, "Testing");
+	appendToDescription("Strategic thinking", 1, "Business case development");
+	appendToDescription("Strategic thinking", 1, "Delivery design");
+	appendToDescription("Strategic thinking", 1, "Feasibility analysis");
+	appendToDescription("Strategic thinking", 1, "Funding");
+	appendToDescription("Strategic thinking", 1, "IP protection");
+	appendToDescription("Strategic thinking", 1, "Market positioning");
+	appendToDescription("Strategic thinking", 1, "Organisational development");
+	appendToDescription("Strategic thinking", 1, "Product / process / service development");
+	appendToDescription("Strategic thinking", 1, "Production");
+	appendToDescription("Strategic thinking", 1, "Risk management");
+	appendToDescription("Strategic thinking", 1, "Stakeholder management");
+	appendToDescription("Strategic thinking", 1, "Strategic management");
+	appendToDescription("Synthesis", 1, "Business case development");
+	appendToDescription("Synthesis", 1, "Feasibility analysis");
+	appendToDescription("Synthesis", 1, "Idea generation");
+	appendToDescription("Synthesis", 1, "Knowledge management");
+	appendToDescription("Synthesis", 1, "Operations management");
+	appendToDescription("Synthesis", 1, "Promotion");
+	appendToDescription("Synthesis", 1, "Prototyping");
+	appendToDescription("Synthesis", 1, "Testing");
+	appendToDescription("Systems thinking", 1, "Administration");
+	appendToDescription("Systems thinking", 1, "Business case development");
+	appendToDescription("Systems thinking", 1, "Change management");
+	appendToDescription("Systems thinking", 1, "Customer service");
+	appendToDescription("Systems thinking", 1, "Delivery design");
+	appendToDescription("Systems thinking", 1, "Market positioning");
+	appendToDescription("Systems thinking", 1, "Operations management");
+	appendToDescription("Systems thinking", 1, "Product / process / service design");
+	appendToDescription("Systems thinking", 1, "Product / process / service development");
+	appendToDescription("Systems thinking", 1, "Production");
+	appendToDescription("Systems thinking", 1, "Project management");
+	appendToDescription("Systems thinking", 1, "Prototyping");
+	appendToDescription("Systems thinking", 1, "Risk management");
+	appendToDescription("Systems thinking", 1, "Stakeholder management");
+	appendToDescription("Systems thinking", 1, "Strategic management");
+	appendToDescription("External self awareness", 1, "Business case development");
+	appendToDescription("External self awareness", 1, "Change management");
+	appendToDescription("External self awareness", 1, "Customer service");
+	appendToDescription("External self awareness", 1, "Feasibility analysis");
+	appendToDescription("External self awareness", 1, "Funding");
+	appendToDescription("External self awareness", 1, "Human resource management");
+	appendToDescription("External self awareness", 1, "Idea generation");
+	appendToDescription("External self awareness", 1, "Product / process / service design");
+	appendToDescription("External self awareness", 1, "Project management");
+	appendToDescription("External self awareness", 1, "Sales");
+	appendToDescription("External self awareness", 1, "Stakeholder management");
+	appendToDescription("External self awareness", 1, "Vision socialisation");
+	appendToDescription("Internal self awareness", 1, "Business case development");
+	appendToDescription("Internal self awareness", 1, "Change management");
+	appendToDescription("Internal self awareness", 1, "Feasibility analysis");
+	appendToDescription("Internal self awareness", 1, "Funding");
+	appendToDescription("Internal self awareness", 1, "Idea generation");
+	appendToDescription("Internal self awareness", 1, "Opportunity identification");
+	appendToDescription("Internal self awareness", 1, "Project management");
+	appendToDescription("Internal self awareness", 1, "Risk management");
+	appendToDescription("Internal self awareness", 1, "Sales");
+	appendToDescription("Internal self awareness", 1, "Stakeholder management");
+	appendToDescription("Internal self awareness", 1, "Strategic management");
+	appendToDescription("Self-regulation", 1, "Change management");
+	appendToDescription("Self-regulation", 1, "Customer service");
+	appendToDescription("Self-regulation", 1, "Funding");
+	appendToDescription("Self-regulation", 1, "Project management");
+	appendToDescription("Self-regulation", 1, "Sales");
+	appendToDescription("Self-regulation", 1, "Stakeholder management");
+	appendToDescription("Self-regulation", 1, "Testing");
+	appendToDescription("Comparative reasoning", 1, "Business case development");
+	appendToDescription("Comparative reasoning", 1, "Delivery design");
+	appendToDescription("Comparative reasoning", 1, "Feasibility analysis");
+	appendToDescription("Comparative reasoning", 1, "Financial management");
+	appendToDescription("Comparative reasoning", 1, "Market positioning");
+	appendToDescription("Comparative reasoning", 1, "Prototyping");
+	appendToDescription("Comparative reasoning", 1, "Risk management");
+	appendToDescription("Comparative reasoning", 1, "Strategic management");
+	appendToDescription("Comparative reasoning", 1, "Testing");
+	appendToDescription("Counterfactual thinking", 1, "Change management");
+	appendToDescription("Counterfactual thinking", 1, "Delivery design");
+	appendToDescription("Counterfactual thinking", 1, "Feasibility analysis");
+	appendToDescription("Counterfactual thinking", 1, "Idea generation");
+	appendToDescription("Counterfactual thinking", 1, "Market positioning");
+	appendToDescription("Counterfactual thinking", 1, "Product / process / service design");
+	appendToDescription("Counterfactual thinking", 1, "Production");
+	appendToDescription("Counterfactual thinking", 1, "Risk management");
+	appendToDescription("Counterfactual thinking", 1, "Strategic management");
+	appendToDescription("Critical analysis", 1, "Delivery design");
+	appendToDescription("Critical analysis", 1, "Feasibility analysis");
+	appendToDescription("Critical analysis", 1, "Financial management");
+	appendToDescription("Critical analysis", 1, "Market positioning");
+	appendToDescription("Critical analysis", 1, "Market research");
+	appendToDescription("Critical analysis", 1, "Operations management");
+	appendToDescription("Critical analysis", 1, "Promotion");
+	appendToDescription("Critical analysis", 1, "Risk management");
+	appendToDescription("Critical analysis", 1, "Testing");
+	appendToDescription("Decision making", 1, "Delivery design");
+	appendToDescription("Decision making", 1, "Financial management");
+	appendToDescription("Decision making", 1, "Human resource management");
+	appendToDescription("Decision making", 1, "Market positioning");
+	appendToDescription("Decision making", 1, "Operations management");
+	appendToDescription("Decision making", 1, "Product / process / service development");
+	appendToDescription("Decision making", 1, "Production");
+	appendToDescription("Decision making", 1, "Promotion");
+	appendToDescription("Decision making", 1, "Prototyping");
+	appendToDescription("Decision making", 1, "Risk management");
+	appendToDescription("Decision making", 1, "Strategic management");
+	appendToDescription("Environment scanning", 1, "Idea generation");
+	appendToDescription("Environment scanning", 1, "Market positioning");
+	appendToDescription("Environment scanning", 1, "Market research");
+	appendToDescription("Environment scanning", 1, "Opportunity identification");
+	appendToDescription("Environment scanning", 1, "Production");
+	appendToDescription("Environment scanning", 1, "Research");
+	appendToDescription("Environment scanning", 1, "Risk management");
+	appendToDescription("Environment scanning", 1, "Sales");
+	appendToDescription("Evidence gathering", 1, "Business case development");
+	appendToDescription("Evidence gathering", 1, "Financial management");
+	appendToDescription("Evidence gathering", 1, "Market research");
+	appendToDescription("Evidence gathering", 1, "Opportunity identification");
+	appendToDescription("Evidence gathering", 1, "Research");
+	appendToDescription("Evidence gathering", 1, "Testing");
+	appendToDescription("Interpretation", 1, "Business case development");
+	appendToDescription("Interpretation", 1, "Customer service");
+	appendToDescription("Interpretation", 1, "Delivery design");
+	appendToDescription("Interpretation", 1, "Financial management");
+	appendToDescription("Interpretation", 1, "Market positioning");
+	appendToDescription("Interpretation", 1, "Market research");
+	appendToDescription("Interpretation", 1, "Opportunity identification");
+	appendToDescription("Interpretation", 1, "Product / process / service design");
+	appendToDescription("Interpretation", 1, "Product / process / service development");
+	appendToDescription("Interpretation", 1, "Promotion");
+	appendToDescription("Interpretation", 1, "Prototyping");
+	appendToDescription("Interpretation", 1, "Research");
+	appendToDescription("Interpretation", 1, "Risk management");
+	appendToDescription("Interpretation", 1, "Sales");
+	appendToDescription("Interpretation", 1, "Strategic management");
+	appendToDescription("Pattern recognition", 1, "Customer service");
+	appendToDescription("Pattern recognition", 1, "Financial management");
+	appendToDescription("Pattern recognition", 1, "Idea generation");
+	appendToDescription("Pattern recognition", 1, "Market positioning");
+	appendToDescription("Pattern recognition", 1, "Market research");
+	appendToDescription("Pattern recognition", 1, "Opportunity identification");
+	appendToDescription("Pattern recognition", 1, "Product / process / service design");
+	appendToDescription("Pattern recognition", 1, "Production");
+	appendToDescription("Pattern recognition", 1, "Promotion");
+	appendToDescription("Pattern recognition", 1, "Research");
+	appendToDescription("Pattern recognition", 1, "Risk management");
+	appendToDescription("Pattern recognition", 1, "Sales");
+	appendToDescription("Pattern recognition", 1, "Strategic management");
+	appendToDescription("Pattern recognition", 1, "Testing");
+	appendToDescription("Problem solving", 1, "Change management");
+	appendToDescription("Problem solving", 1, "Customer service");
+	appendToDescription("Problem solving", 1, "Delivery design");
+	appendToDescription("Problem solving", 1, "Operations management");
+	appendToDescription("Problem solving", 1, "Product / process / service design");
+	appendToDescription("Problem solving", 1, "Product / process / service development");
+	appendToDescription("Problem solving", 1, "Production");
+	appendToDescription("Problem solving", 1, "Project management");
+	appendToDescription("Problem solving", 1, "Prototyping");
+	appendToDescription("Problem solving", 1, "Sales");
+	appendToDescription("Problem solving", 1, "Testing");
+	appendToDescription("Forecasting", 1, "Business case development");
+	appendToDescription("Forecasting", 1, "Feasibility analysis");
+	appendToDescription("Forecasting", 1, "Financial management");
+	appendToDescription("Forecasting", 1, "Funding");
+	appendToDescription("Forecasting", 1, "IP protection");
+	appendToDescription("Forecasting", 1, "Market positioning");
+	appendToDescription("Forecasting", 1, "Opportunity identification");
+	appendToDescription("Forecasting", 1, "Risk management");
+	appendToDescription("Forecasting", 1, "Strategic management");
+	appendToDescription("Forecasting", 1, "Testing");
+	appendToDescription("Forecasting", 1, "Vision socialisation");
+	appendToDescription("Knowledge brokering", 1, "Delivery design");
+	appendToDescription("Knowledge brokering", 1, "Human resource management");
+	appendToDescription("Knowledge brokering", 1, "Idea generation");
+	appendToDescription("Knowledge brokering", 1, "Knowledge management");
+	appendToDescription("Knowledge brokering", 1, "Market positioning");
+	appendToDescription("Knowledge brokering", 1, "Market research");
+	appendToDescription("Knowledge brokering", 1, "Opportunity identification");
+	appendToDescription("Knowledge brokering", 1, "Research");
+	appendToDescription("Knowledge brokering", 1, "Stakeholder management");
+	appendToDescription("Modelling", 1, "Business case development");
+	appendToDescription("Modelling", 1, "Delivery design");
+	appendToDescription("Modelling", 1, "Feasibility analysis");
+	appendToDescription("Modelling", 1, "Financial management");
+	appendToDescription("Modelling", 1, "Funding");
+	appendToDescription("Modelling", 1, "Market positioning");
+	appendToDescription("Modelling", 1, "Operations management");
+	appendToDescription("Modelling", 1, "Opportunity identification");
+	appendToDescription("Modelling", 1, "Organisational development");
+	appendToDescription("Modelling", 1, "Product / process / service design");
+	appendToDescription("Modelling", 1, "Production");
+	appendToDescription("Modelling", 1, "Promotion");
+	appendToDescription("Modelling", 1, "Prototyping");
+	appendToDescription("Modelling", 1, "Risk management");
+	appendToDescription("Modelling", 1, "Strategic management");
+	appendToDescription("Organising", 1, "Administration");
+	appendToDescription("Organising", 1, "Change management");
+	appendToDescription("Organising", 1, "Delivery design");
+	appendToDescription("Organising", 1, "Human resource management");
+	appendToDescription("Organising", 1, "Knowledge management");
+	appendToDescription("Organising", 1, "Operations management");
+	appendToDescription("Organising", 1, "Organisational development");
+	appendToDescription("Organising", 1, "Product / process / service development");
+	appendToDescription("Organising", 1, "Production");
+	appendToDescription("Organising", 1, "Project management");
+	appendToDescription("Organising", 1, "Research");
+	appendToDescription("Organising", 1, "Stakeholder management");
+	appendToDescription("Prioritisation", 1, "Administration");
+	appendToDescription("Prioritisation", 1, "Business case development");
+	appendToDescription("Prioritisation", 1, "Change management");
+	appendToDescription("Prioritisation", 1, "Delivery design");
+	appendToDescription("Prioritisation", 1, "Financial management");
+	appendToDescription("Prioritisation", 1, "Funding");
+	appendToDescription("Prioritisation", 1, "IP protection");
+	appendToDescription("Prioritisation", 1, "Market positioning");
+	appendToDescription("Prioritisation", 1, "Operations management");
+	appendToDescription("Prioritisation", 1, "Organisational development");
+	appendToDescription("Prioritisation", 1, "Product / process / service development");
+	appendToDescription("Prioritisation", 1, "Production");
+	appendToDescription("Prioritisation", 1, "Project management");
+	appendToDescription("Prioritisation", 1, "Promotion");
+	appendToDescription("Prioritisation", 1, "Research");
+	appendToDescription("Prioritisation", 1, "Risk management");
+	appendToDescription("Prioritisation", 1, "Stakeholder management");
+	appendToDescription("Prioritisation", 1, "Strategic management");
+	appendToDescription("Active listening", 1, "Change management");
+	appendToDescription("Active listening", 1, "Customer service");
+	appendToDescription("Active listening", 1, "Delivery design");
+	appendToDescription("Active listening", 1, "Idea generation");
+	appendToDescription("Active listening", 1, "Market positioning");
+	appendToDescription("Active listening", 1, "Market research");
+	appendToDescription("Active listening", 1, "Opportunity identification");
+	appendToDescription("Active listening", 1, "Product / process / service design");
+	appendToDescription("Active listening", 1, "Project management");
+	appendToDescription("Active listening", 1, "Sales");
+	appendToDescription("Active listening", 1, "Stakeholder management");
+	appendToDescription("Active listening", 1, "Testing");
+	appendToDescription("Active listening", 1, "Vision socialisation");
+	appendToDescription("Collaboration", 1, "Change management");
+	appendToDescription("Collaboration", 1, "Delivery design");
+	appendToDescription("Collaboration", 1, "Human resource management");
+	appendToDescription("Collaboration", 1, "Idea generation");
+	appendToDescription("Collaboration", 1, "Knowledge management");
+	appendToDescription("Collaboration", 1, "Market research");
+	appendToDescription("Collaboration", 1, "Product / process / service design");
+	appendToDescription("Collaboration", 1, "Product / process / service development");
+	appendToDescription("Collaboration", 1, "Production");
+	appendToDescription("Collaboration", 1, "Project management");
+	appendToDescription("Collaboration", 1, "Research");
+	appendToDescription("Collaboration", 1, "Stakeholder management");
+	appendToDescription("Communication", 1, "Business case development");
+	appendToDescription("Communication", 1, "Change management");
+	appendToDescription("Communication", 1, "Customer service");
+	appendToDescription("Communication", 1, "Funding");
+	appendToDescription("Communication", 1, "Human resource management");
+	appendToDescription("Communication", 1, "Market positioning");
+	appendToDescription("Communication", 1, "Production");
+	appendToDescription("Communication", 1, "Project management");
+	appendToDescription("Communication", 1, "Promotion");
+	appendToDescription("Communication", 1, "Research");
+	appendToDescription("Communication", 1, "Sales");
+	appendToDescription("Communication", 1, "Stakeholder management");
+	appendToDescription("Communication", 1, "Testing");
+	appendToDescription("Communication", 1, "Vision socialisation");
+	appendToDescription("Delegation", 1, "Human resource management");
+	appendToDescription("Delegation", 1, "IP protection");
+	appendToDescription("Delegation", 1, "Organisational development");
+	appendToDescription("Delegation", 1, "Production");
+	appendToDescription("Delegation", 1, "Project management");
+	appendToDescription("Delegation", 1, "Research");
+	appendToDescription("Delegation", 1, "Strategic management");
+	appendToDescription("Feedback", 1, "Customer service");
+	appendToDescription("Feedback", 1, "Delivery design");
+	appendToDescription("Feedback", 1, "Human resource management");
+	appendToDescription("Feedback", 1, "Market positioning");
+	appendToDescription("Feedback", 1, "Opportunity identification");
+	appendToDescription("Feedback", 1, "Product / process / service design");
+	appendToDescription("Feedback", 1, "Production");
+	appendToDescription("Feedback", 1, "Project management");
+	appendToDescription("Feedback", 1, "Research");
+	appendToDescription("Feedback", 1, "Sales");
+	appendToDescription("Feedback", 1, "Stakeholder management");
+	appendToDescription("Feedback", 1, "Testing");
+	appendToDescription("Feedback", 1, "Vision socialisation");
+	appendToDescription("Influencing", 1, "Business case development");
+	appendToDescription("Influencing", 1, "Change management");
+	appendToDescription("Influencing", 1, "Delivery design");
+	appendToDescription("Influencing", 1, "Funding");
+	appendToDescription("Influencing", 1, "Human resource management");
+	appendToDescription("Influencing", 1, "Idea generation");
+	appendToDescription("Influencing", 1, "Organisational development");
+	appendToDescription("Influencing", 1, "Product / process / service design");
+	appendToDescription("Influencing", 1, "Product / process / service development");
+	appendToDescription("Influencing", 1, "Project management");
+	appendToDescription("Influencing", 1, "Promotion");
+	appendToDescription("Influencing", 1, "Sales");
+	appendToDescription("Influencing", 1, "Stakeholder management");
+	appendToDescription("Influencing", 1, "Vision socialisation");
+	appendToDescription("Negotiation", 1, "Business case development");
+	appendToDescription("Negotiation", 1, "Customer service");
+	appendToDescription("Negotiation", 1, "Funding");
+	appendToDescription("Negotiation", 1, "Human resource management");
+	appendToDescription("Negotiation", 1, "Idea generation");
+	appendToDescription("Negotiation", 1, "Knowledge management");
+	appendToDescription("Negotiation", 1, "Organisational development");
+	appendToDescription("Negotiation", 1, "Product / process / service design");
+	appendToDescription("Negotiation", 1, "Product / process / service development");
+	appendToDescription("Negotiation", 1, "Production");
+	appendToDescription("Negotiation", 1, "Promotion");
+	appendToDescription("Negotiation", 1, "Sales");
+	appendToDescription("Negotiation", 1, "Stakeholder management");
+
+	appendToDescription("Abstract thinking", 2, "Idea generation");
+	appendToDescription("Abstract thinking", 2, "Opportunity identification");
+	appendToDescription("Abstract thinking", 2, "Product / process / service design");
+	appendToDescription("Abstract thinking", 2, "Prototyping");
+	appendToDescription("Abstract thinking", 2, "Strategic management");
+	appendToDescription("Creativity", 2, "Idea generation");
+	appendToDescription("Creativity", 2, "Product / process / service design");
+	appendToDescription("Creativity", 2, "Strategic management");
+	appendToDescription("Mental agility", 2, "Idea generation");
+	appendToDescription("Mental agility", 2, "Opportunity identification");
+	appendToDescription("Mental agility", 2, "Product / process / service design");
+	appendToDescription("Mental agility", 2, "Testing");
+	appendToDescription("Strategic thinking", 2, "Feasibility analysis");
+	appendToDescription("Strategic thinking", 2, "Strategic management");
+	appendToDescription("Synthesis", 2, "Feasibility analysis");
+	appendToDescription("Synthesis", 2, "Idea generation");
+	appendToDescription("Synthesis", 2, "Prototyping");
+	appendToDescription("Synthesis", 2, "Testing");
+	appendToDescription("Systems thinking", 2, "Product / process / service design");
+	appendToDescription("Systems thinking", 2, "Project management");
+	appendToDescription("Systems thinking", 2, "Prototyping");
+	appendToDescription("Systems thinking", 2, "Strategic management");
+	appendToDescription("Self-regulation", 2, "Project management");
+	appendToDescription("External self awareness", 2, "Idea generation");
+	appendToDescription("External self awareness", 2, "Product / process / service design");
+	appendToDescription("External self awareness", 2, "Project management");
+	appendToDescription("External self awareness", 2, "Vision socialisation");
+	appendToDescription("Internal self awareness", 2, "Idea generation");
+	appendToDescription("Internal self awareness", 2, "Opportunity identification");
+	appendToDescription("Internal self awareness", 2, "Project management");
+	appendToDescription("Internal self awareness", 2, "Strategic management");
+	appendToDescription("Comparative reasoning", 2, "Feasibility analysis");
+	appendToDescription("Comparative reasoning", 2, "Prototyping");
+	appendToDescription("Comparative reasoning", 2, "Strategic management");
+	appendToDescription("Comparative reasoning", 2, "Testing");
+	appendToDescription("Counterfactual thinking", 2, "Feasibility analysis");
+	appendToDescription("Counterfactual thinking", 2, "Idea generation");
+	appendToDescription("Counterfactual thinking", 2, "Product / process / service design");
+	appendToDescription("Counterfactual thinking", 2, "Strategic management");
+	appendToDescription("Critical analysis", 2, "Feasibility analysis");
+	appendToDescription("Critical analysis", 2, "Testing");
+	appendToDescription("Decision making", 2, "Prototyping");
+	appendToDescription("Decision making", 2, "Strategic management");
+	appendToDescription("Environment scanning", 2, "Idea generation");
+	appendToDescription("Environment scanning", 2, "Opportunity identification");
+	appendToDescription("Environment scanning", 2, "Research");
+	appendToDescription("Evidence gathering", 2, "Opportunity identification");
+	appendToDescription("Evidence gathering", 2, "Research");
+	appendToDescription("Evidence gathering", 2, "Testing");
+	appendToDescription("Interpretation", 2, "Opportunity identification");
+	appendToDescription("Interpretation", 2, "Product / process / service design");
+	appendToDescription("Interpretation", 2, "Prototyping");
+	appendToDescription("Interpretation", 2, "Research");
+	appendToDescription("Interpretation", 2, "Strategic management");
+	appendToDescription("Pattern recognition", 2, "Idea generation");
+	appendToDescription("Pattern recognition", 2, "Opportunity identification");
+	appendToDescription("Pattern recognition", 2, "Product / process / service design");
+	appendToDescription("Pattern recognition", 2, "Research");
+	appendToDescription("Pattern recognition", 2, "Strategic management");
+	appendToDescription("Problem solving", 2, "Product / process / service design");
+	appendToDescription("Problem solving", 2, "Project management");
+	appendToDescription("Problem solving", 2, "Prototyping");
+	appendToDescription("Forecasting", 2, "Opportunity identification");
+	appendToDescription("Forecasting", 2, "Strategic management");
+	appendToDescription("Forecasting", 2, "Testing");
+	appendToDescription("Forecasting", 2, "Vision socialisation");
+	appendToDescription("Knowledge brokering", 2, "Idea generation");
+	appendToDescription("Knowledge brokering", 2, "Opportunity identification");
+	appendToDescription("Modelling", 2, "Opportunity identification");
+	appendToDescription("Modelling", 2, "Product / process / service design");
+	appendToDescription("Modelling", 2, "Prototyping");
+	appendToDescription("Modelling", 2, "Strategic management");
+	appendToDescription("Organising", 2, "Project management");
+	appendToDescription("Organising", 2, "Research");
+	appendToDescription("Prioritisation", 2, "Project management");
+	appendToDescription("Prioritisation", 2, "Research");
+	appendToDescription("Prioritisation", 2, "Strategic management");
+	appendToDescription("Active listening", 2, "Idea generation");
+	appendToDescription("Active listening", 2, "Opportunity identification");
+	appendToDescription("Active listening", 2, "Product / process / service design");
+	appendToDescription("Active listening", 2, "Project management");
+	appendToDescription("Active listening", 2, "Vision socialisation");
+	appendToDescription("Collaboration", 2, "Idea generation");
+	appendToDescription("Collaboration", 2, "Product / process / service design");
+	appendToDescription("Collaboration", 2, "Project management");
+	appendToDescription("Communication", 2, "Project management");
+	appendToDescription("Communication", 2, "Research");
+	appendToDescription("Communication", 2, "Vision socialisation");
+	appendToDescription("Delegation", 2, "Project management");
+	appendToDescription("Delegation", 2, "Research");
+	appendToDescription("Delegation", 2, "Strategic management");
+	appendToDescription("Feedback", 2, "Opportunity identification");
+	appendToDescription("Feedback", 2, "Product / process / service design");
+	appendToDescription("Feedback", 2, "Project management");
+	appendToDescription("Feedback", 2, "Research");
+	appendToDescription("Feedback", 2, "Vision socialisation");
+	appendToDescription("Influencing", 2, "Idea generation");
+	appendToDescription("Influencing", 2, "Product / process / service design");
+	appendToDescription("Influencing", 2, "Project management");
+	appendToDescription("Influencing", 2, "Vision socialisation");
+	appendToDescription("Negotiation", 2, "Idea generation");
+	appendToDescription("Negotiation", 2, "Product / process / service design");
+	appendToDescription("Abstract thinking", 3, "Business case development");
+	appendToDescription("Abstract thinking", 3, "Market positioning");
+	appendToDescription("Abstract thinking", 3, "Opportunity identification");
+	appendToDescription("Abstract thinking", 3, "Product / process / service design");
+	appendToDescription("Abstract thinking", 3, "Promotion");
+	appendToDescription("Abstract thinking", 3, "Strategic management");
+	appendToDescription("Creativity", 3, "Business case development");
+	appendToDescription("Creativity", 3, "Funding");
+	appendToDescription("Creativity", 3, "Market positioning");
+	appendToDescription("Creativity", 3, "Product / process / service design");
+	appendToDescription("Creativity", 3, "Product / process / service development");
+	appendToDescription("Creativity", 3, "Promotion");
+	appendToDescription("Creativity", 3, "Strategic management");
+	appendToDescription("Mental agility", 3, "Business case development");
+	appendToDescription("Mental agility", 3, "Funding");
+	appendToDescription("Mental agility", 3, "Opportunity identification");
+	appendToDescription("Mental agility", 3, "Product / process / service design");
+	appendToDescription("Mental agility", 3, "Production");
+	appendToDescription("Mental agility", 3, "Testing");
+	appendToDescription("Strategic thinking", 3, "Business case development");
+	appendToDescription("Strategic thinking", 3, "Funding");
+	appendToDescription("Strategic thinking", 3, "IP protection");
+	appendToDescription("Strategic thinking", 3, "Market positioning");
+	appendToDescription("Strategic thinking", 3, "Product / process / service development");
+	appendToDescription("Strategic thinking", 3, "Production");
+	appendToDescription("Strategic thinking", 3, "Strategic management");
+	appendToDescription("Synthesis", 3, "Business case development");
+	appendToDescription("Synthesis", 3, "Promotion");
+	appendToDescription("Synthesis", 3, "Testing");
+	appendToDescription("Systems thinking", 3, "Market positioning");
+	appendToDescription("Systems thinking", 3, "Product / process / service design");
+	appendToDescription("Systems thinking", 3, "Product / process / service development");
+	appendToDescription("Systems thinking", 3, "Production");
+	appendToDescription("Systems thinking", 3, "Project management");
+	appendToDescription("Systems thinking", 3, "Strategic management");
+	appendToDescription("Self-regulation", 3, "Funding");
+	appendToDescription("Self-regulation", 3, "Project management");
+	appendToDescription("Self-regulation", 3, "Testing");
+	appendToDescription("External self awareness", 3, "Business case development");
+	appendToDescription("External self awareness", 3, "Feasibility analysis");
+	appendToDescription("External self awareness", 3, "Funding");
+	appendToDescription("External self awareness", 3, "Project management");
+	appendToDescription("External self awareness", 3, "Vision socialisation");
+	appendToDescription("Internal self awareness", 3, "Business case development");
+	appendToDescription("Internal self awareness", 3, "Feasibility analysis");
+	appendToDescription("Internal self awareness", 3, "Funding");
+	appendToDescription("Internal self awareness", 3, "Opportunity identification");
+	appendToDescription("Internal self awareness", 3, "Project management");
+	appendToDescription("Internal self awareness", 3, "Strategic management");
+	appendToDescription("Comparative reasoning", 3, "Business case development");
+	appendToDescription("Comparative reasoning", 3, "Delivery design");
+	appendToDescription("Comparative reasoning", 3, "Feasibility analysis");
+	appendToDescription("Comparative reasoning", 3, "Market positioning");
+	appendToDescription("Comparative reasoning", 3, "Strategic management");
+	appendToDescription("Comparative reasoning", 3, "Testing");
+	appendToDescription("Counterfactual thinking", 3, "Delivery design");
+	appendToDescription("Counterfactual thinking", 3, "Feasibility analysis");
+	appendToDescription("Counterfactual thinking", 3, "Market positioning");
+	appendToDescription("Counterfactual thinking", 3, "Product / process / service design");
+	appendToDescription("Counterfactual thinking", 3, "Production");
+	appendToDescription("Counterfactual thinking", 3, "Strategic management");
+	appendToDescription("Critical analysis", 3, "Delivery design");
+	appendToDescription("Critical analysis", 3, "Feasibility analysis");
+	appendToDescription("Critical analysis", 3, "Market positioning");
+	appendToDescription("Critical analysis", 3, "Market research");
+	appendToDescription("Critical analysis", 3, "Promotion");
+	appendToDescription("Critical analysis", 3, "Testing");
+	appendToDescription("Decision making", 3, "Delivery design");
+	appendToDescription("Decision making", 3, "Market positioning");
+	appendToDescription("Decision making", 3, "Product / process / service development");
+	appendToDescription("Decision making", 3, "Production");
+	appendToDescription("Decision making", 3, "Promotion");
+	appendToDescription("Decision making", 3, "Strategic management");
+	appendToDescription("Environment scanning", 3, "Market positioning");
+	appendToDescription("Environment scanning", 3, "Market research");
+	appendToDescription("Environment scanning", 3, "Opportunity identification");
+	appendToDescription("Environment scanning", 3, "Production");
+	appendToDescription("Environment scanning", 3, "Research");
+	appendToDescription("Evidence gathering", 3, "Business case development");
+	appendToDescription("Evidence gathering", 3, "Market research");
+	appendToDescription("Evidence gathering", 3, "Opportunity identification");
+	appendToDescription("Evidence gathering", 3, "Research");
+	appendToDescription("Evidence gathering", 3, "Testing");
+	appendToDescription("Interpretation", 3, "Business case development");
+	appendToDescription("Interpretation", 3, "Delivery design");
+	appendToDescription("Interpretation", 3, "Market positioning");
+	appendToDescription("Interpretation", 3, "Market research");
+	appendToDescription("Interpretation", 3, "Opportunity identification");
+	appendToDescription("Interpretation", 3, "Product / process / service design");
+	appendToDescription("Interpretation", 3, "Product / process / service development");
+	appendToDescription("Interpretation", 3, "Promotion");
+	appendToDescription("Interpretation", 3, "Research");
+	appendToDescription("Interpretation", 3, "Strategic management");
+	appendToDescription("Pattern recognition", 3, "Market positioning");
+	appendToDescription("Pattern recognition", 3, "Market research");
+	appendToDescription("Pattern recognition", 3, "Opportunity identification");
+	appendToDescription("Pattern recognition", 3, "Product / process / service design");
+	appendToDescription("Pattern recognition", 3, "Production");
+	appendToDescription("Pattern recognition", 3, "Promotion");
+	appendToDescription("Pattern recognition", 3, "Research");
+	appendToDescription("Pattern recognition", 3, "Strategic management");
+	appendToDescription("Pattern recognition", 3, "Testing");
+	appendToDescription("Problem solving", 3, "Delivery design");
+	appendToDescription("Problem solving", 3, "Product / process / service design");
+	appendToDescription("Problem solving", 3, "Product / process / service development");
+	appendToDescription("Problem solving", 3, "Production");
+	appendToDescription("Problem solving", 3, "Project management");
+	appendToDescription("Problem solving", 3, "Testing");
+	appendToDescription("Forecasting", 3, "Business case development");
+	appendToDescription("Forecasting", 3, "Feasibility analysis");
+	appendToDescription("Forecasting", 3, "Funding");
+	appendToDescription("Forecasting", 3, "IP protection");
+	appendToDescription("Forecasting", 3, "Market positioning");
+	appendToDescription("Forecasting", 3, "Opportunity identification");
+	appendToDescription("Forecasting", 3, "Strategic management");
+	appendToDescription("Forecasting", 3, "Vision socialisation");
+	appendToDescription("Knowledge brokering", 3, "Delivery design");
+	appendToDescription("Knowledge brokering", 3, "Market research");
+	appendToDescription("Knowledge brokering", 3, "Opportunity identification");
+	appendToDescription("Knowledge brokering", 3, "Research");
+	appendToDescription("Modelling", 3, "Business case development");
+	appendToDescription("Modelling", 3, "Delivery design");
+	appendToDescription("Modelling", 3, "Feasibility analysis");
+	appendToDescription("Modelling", 3, "Funding");
+	appendToDescription("Modelling", 3, "Market positioning");
+	appendToDescription("Modelling", 3, "Opportunity identification");
+	appendToDescription("Modelling", 3, "Production");
+	appendToDescription("Modelling", 3, "Strategic management");
+	appendToDescription("Organising", 3, "Delivery design");
+	appendToDescription("Organising", 3, "Production");
+	appendToDescription("Organising", 3, "Project management");
+	appendToDescription("Prioritisation", 3, "Business case development");
+	appendToDescription("Prioritisation", 3, "Delivery design");
+	appendToDescription("Prioritisation", 3, "Funding");
+	appendToDescription("Prioritisation", 3, "IP protection");
+	appendToDescription("Prioritisation", 3, "Production");
+	appendToDescription("Prioritisation", 3, "Project management");
+	appendToDescription("Prioritisation", 3, "Strategic management");
+	appendToDescription("Active listening", 3, "Opportunity identification");
+	appendToDescription("Active listening", 3, "Project management");
+	appendToDescription("Active listening", 3, "Testing");
+	appendToDescription("Active listening", 3, "Vision socialisation");
+	appendToDescription("Collaboration", 3, "Market research");
+	appendToDescription("Collaboration", 3, "Product / process / service design");
+	appendToDescription("Collaboration", 3, "Product / process / service development");
+	appendToDescription("Collaboration", 3, "Project management");
+	appendToDescription("Collaboration", 3, "Research");
+	appendToDescription("Communication", 3, "Business case development");
+	appendToDescription("Communication", 3, "Funding");
+	appendToDescription("Communication", 3, "Project management");
+	appendToDescription("Communication", 3, "Testing");
+	appendToDescription("Communication", 3, "Vision socialisation");
+	appendToDescription("Delegation", 3, "IP protection");
+	appendToDescription("Delegation", 3, "Production");
+	appendToDescription("Delegation", 3, "Project management");
+	appendToDescription("Delegation", 3, "Strategic management");
+	appendToDescription("Feedback", 3, "Opportunity identification");
+	appendToDescription("Feedback", 3, "Project management");
+	appendToDescription("Feedback", 3, "Testing");
+	appendToDescription("Feedback", 3, "Vision socialisation");
+	appendToDescription("Influencing", 3, "Business case development");
+	appendToDescription("Influencing", 3, "Funding");
+	appendToDescription("Influencing", 3, "Product / process / service design");
+	appendToDescription("Influencing", 3, "Product / process / service development");
+	appendToDescription("Influencing", 3, "Project management");
+	appendToDescription("Influencing", 3, "Vision socialisation");
+	appendToDescription("Negotiation", 3, "Business case development");
+	appendToDescription("Negotiation", 3, "Funding");
+	appendToDescription("Negotiation", 3, "Product / process / service design");
+	appendToDescription("Negotiation", 3, "Product / process / service development");
+	appendToDescription("Abstract thinking", 4, "Business case development");
+	appendToDescription("Abstract thinking", 4, "Opportunity identification");
+	appendToDescription("Abstract thinking", 4, "Organisational development");
+	appendToDescription("Abstract thinking", 4, "Risk management");
+	appendToDescription("Abstract thinking", 4, "Strategic management");
+	appendToDescription("Creativity", 4, "Business case development");
+	appendToDescription("Creativity", 4, "Funding");
+	appendToDescription("Creativity", 4, "Organisational development");
+	appendToDescription("Creativity", 4, "Strategic management");
+	appendToDescription("Mental agility", 4, "Business case development");
+	appendToDescription("Mental agility", 4, "Change management");
+	appendToDescription("Mental agility", 4, "Delivery design");
+	appendToDescription("Mental agility", 4, "Funding");
+	appendToDescription("Mental agility", 4, "Operations management");
+	appendToDescription("Mental agility", 4, "Opportunity identification");
+	appendToDescription("Mental agility", 4, "Organisational development");
+	appendToDescription("Mental agility", 4, "Risk management");
+	appendToDescription("Strategic thinking", 4, "Delivery design");
+	appendToDescription("Strategic thinking", 4, "Funding");
+	appendToDescription("Strategic thinking", 4, "IP protection");
+	appendToDescription("Strategic thinking", 4, "Organisational development");
+	appendToDescription("Strategic thinking", 4, "Production");
+	appendToDescription("Strategic thinking", 4, "Risk management");
+	appendToDescription("Strategic thinking", 4, "Stakeholder management");
+	appendToDescription("Strategic thinking", 4, "Strategic management");
+	appendToDescription("Synthesis", 4, "Business case development");
+	appendToDescription("Synthesis", 4, "Knowledge management");
+	appendToDescription("Synthesis", 4, "Operations management");
+	appendToDescription("Systems thinking", 4, "Administration");
+	appendToDescription("Systems thinking", 4, "Business case development");
+	appendToDescription("Systems thinking", 4, "Change management");
+	appendToDescription("Systems thinking", 4, "Customer service");
+	appendToDescription("Systems thinking", 4, "Delivery design");
+	appendToDescription("Systems thinking", 4, "Operations management");
+	appendToDescription("Systems thinking", 4, "Risk management");
+	appendToDescription("Systems thinking", 4, "Stakeholder management");
+	appendToDescription("Systems thinking", 4, "Strategic management");
+	appendToDescription("Self-regulation", 4, "Change management");
+	appendToDescription("Self-regulation", 4, "Customer service");
+	appendToDescription("Self-regulation", 4, "Funding");
+	appendToDescription("Self-regulation", 4, "Sales");
+	appendToDescription("Self-regulation", 4, "Stakeholder management");
+	appendToDescription("External self awareness", 4, "Change management");
+	appendToDescription("External self awareness", 4, "Customer service");
+	appendToDescription("External self awareness", 4, "Funding");
+	appendToDescription("External self awareness", 4, "Human resource management");
+	appendToDescription("External self awareness", 4, "Sales");
+	appendToDescription("External self awareness", 4, "Stakeholder management");
+	appendToDescription("External self awareness", 4, "Vision socialisation");
+	appendToDescription("Internal self awareness", 4, "Change management");
+	appendToDescription("Internal self awareness", 4, "Funding");
+	appendToDescription("Internal self awareness", 4, "Opportunity identification");
+	appendToDescription("Internal self awareness", 4, "Risk management");
+	appendToDescription("Internal self awareness", 4, "Sales");
+	appendToDescription("Internal self awareness", 4, "Stakeholder management");
+	appendToDescription("Internal self awareness", 4, "Strategic management");
+	appendToDescription("Comparative reasoning", 4, "Business case development");
+	appendToDescription("Comparative reasoning", 4, "Feasibility analysis");
+	appendToDescription("Comparative reasoning", 4, "Financial management");
+	appendToDescription("Comparative reasoning", 4, "Risk management");
+	appendToDescription("Comparative reasoning", 4, "Strategic management");
+	appendToDescription("Counterfactual thinking", 4, "Change management");
+	appendToDescription("Counterfactual thinking", 4, "Feasibility analysis");
+	appendToDescription("Counterfactual thinking", 4, "Risk management");
+	appendToDescription("Counterfactual thinking", 4, "Strategic management");
+	appendToDescription("Critical analysis", 4, "Feasibility analysis");
+	appendToDescription("Critical analysis", 4, "Financial management");
+	appendToDescription("Critical analysis", 4, "Operations management");
+	appendToDescription("Critical analysis", 4, "Risk management");
+	appendToDescription("Decision making", 4, "Financial management");
+	appendToDescription("Decision making", 4, "Human resource management");
+	appendToDescription("Decision making", 4, "Operations management");
+	appendToDescription("Decision making", 4, "Product / process / service development");
+	appendToDescription("Decision making", 4, "Risk management");
+	appendToDescription("Decision making", 4, "Strategic management");
+	appendToDescription("Environment scanning", 4, "Market positioning");
+	appendToDescription("Environment scanning", 4, "Opportunity identification");
+	appendToDescription("Environment scanning", 4, "Production");
+	appendToDescription("Environment scanning", 4, "Risk management");
+	appendToDescription("Environment scanning", 4, "Sales");
+	appendToDescription("Evidence gathering", 4, "Business case development");
+	appendToDescription("Evidence gathering", 4, "Financial management");
+	appendToDescription("Evidence gathering", 4, "Opportunity identification");
+	appendToDescription("Interpretation", 4, "Business case development");
+	appendToDescription("Interpretation", 4, "Customer service");
+	appendToDescription("Interpretation", 4, "Financial management");
+	appendToDescription("Interpretation", 4, "Market research");
+	appendToDescription("Interpretation", 4, "Opportunity identification");
+	appendToDescription("Interpretation", 4, "Product / process / service development");
+	appendToDescription("Interpretation", 4, "Risk management");
+	appendToDescription("Interpretation", 4, "Sales");
+	appendToDescription("Interpretation", 4, "Strategic management");
+	appendToDescription("Pattern recognition", 4, "Customer service");
+	appendToDescription("Pattern recognition", 4, "Financial management");
+	appendToDescription("Pattern recognition", 4, "Market research");
+	appendToDescription("Pattern recognition", 4, "Opportunity identification");
+	appendToDescription("Pattern recognition", 4, "Risk management");
+	appendToDescription("Pattern recognition", 4, "Sales");
+	appendToDescription("Pattern recognition", 4, "Strategic management");
+	appendToDescription("Problem solving", 4, "Change management");
+	appendToDescription("Problem solving", 4, "Customer service");
+	appendToDescription("Problem solving", 4, "Operations management");
+	appendToDescription("Problem solving", 4, "Product / process / service development");
+	appendToDescription("Problem solving", 4, "Sales");
+	appendToDescription("Forecasting", 4, "Business case development");
+	appendToDescription("Forecasting", 4, "Feasibility analysis");
+	appendToDescription("Forecasting", 4, "Financial management");
+	appendToDescription("Forecasting", 4, "Funding");
+	appendToDescription("Forecasting", 4, "IP protection");
+	appendToDescription("Forecasting", 4, "Market positioning");
+	appendToDescription("Forecasting", 4, "Opportunity identification");
+	appendToDescription("Forecasting", 4, "Risk management");
+	appendToDescription("Forecasting", 4, "Strategic management");
+	appendToDescription("Forecasting", 4, "Vision socialisation");
+	appendToDescription("Knowledge brokering", 4, "Delivery design");
+	appendToDescription("Knowledge brokering", 4, "Human resource management");
+	appendToDescription("Knowledge brokering", 4, "Knowledge management");
+	appendToDescription("Knowledge brokering", 4, "Market positioning");
+	appendToDescription("Knowledge brokering", 4, "Opportunity identification");
+	appendToDescription("Knowledge brokering", 4, "Stakeholder management");
+	appendToDescription("Modelling", 4, "Business case development");
+	appendToDescription("Modelling", 4, "Delivery design");
+	appendToDescription("Modelling", 4, "Feasibility analysis");
+	appendToDescription("Modelling", 4, "Financial management");
+	appendToDescription("Modelling", 4, "Funding");
+	appendToDescription("Modelling", 4, "Market positioning");
+	appendToDescription("Modelling", 4, "Operations management");
+	appendToDescription("Modelling", 4, "Opportunity identification");
+	appendToDescription("Modelling", 4, "Organisational development");
+	appendToDescription("Modelling", 4, "Promotion");
+	appendToDescription("Modelling", 4, "Risk management");
+	appendToDescription("Modelling", 4, "Strategic management");
+	appendToDescription("Organising", 4, "Administration");
+	appendToDescription("Organising", 4, "Change management");
+	appendToDescription("Organising", 4, "Delivery design");
+	appendToDescription("Organising", 4, "Human resource management");
+	appendToDescription("Organising", 4, "Knowledge management");
+	appendToDescription("Organising", 4, "Operations management");
+	appendToDescription("Organising", 4, "Organisational development");
+	appendToDescription("Organising", 4, "Product / process / service development");
+	appendToDescription("Organising", 4, "Stakeholder management");
+	appendToDescription("Prioritisation", 4, "Administration");
+	appendToDescription("Prioritisation", 4, "Business case development");
+	appendToDescription("Prioritisation", 4, "Change management");
+	appendToDescription("Prioritisation", 4, "Delivery design");
+	appendToDescription("Prioritisation", 4, "Financial management");
+	appendToDescription("Prioritisation", 4, "Funding");
+	appendToDescription("Prioritisation", 4, "IP protection");
+	appendToDescription("Prioritisation", 4, "Market positioning");
+	appendToDescription("Prioritisation", 4, "Operations management");
+	appendToDescription("Prioritisation", 4, "Organisational development");
+	appendToDescription("Prioritisation", 4, "Product / process / service development");
+	appendToDescription("Prioritisation", 4, "Promotion");
+	appendToDescription("Prioritisation", 4, "Risk management");
+	appendToDescription("Prioritisation", 4, "Stakeholder management");
+	appendToDescription("Prioritisation", 4, "Strategic management");
+	appendToDescription("Active listening", 4, "Change management");
+	appendToDescription("Active listening", 4, "Customer service");
+	appendToDescription("Active listening", 4, "Delivery design");
+	appendToDescription("Active listening", 4, "Market positioning");
+	appendToDescription("Active listening", 4, "Market research");
+	appendToDescription("Active listening", 4, "Opportunity identification");
+	appendToDescription("Active listening", 4, "Sales");
+	appendToDescription("Active listening", 4, "Stakeholder management");
+	appendToDescription("Active listening", 4, "Vision socialisation");
+	appendToDescription("Collaboration", 4, "Change management");
+	appendToDescription("Collaboration", 4, "Delivery design");
+	appendToDescription("Collaboration", 4, "Human resource management");
+	appendToDescription("Collaboration", 4, "Knowledge management");
+	appendToDescription("Collaboration", 4, "Production");
+	appendToDescription("Collaboration", 4, "Stakeholder management");
+	appendToDescription("Communication", 4, "Business case development");
+	appendToDescription("Communication", 4, "Change management");
+	appendToDescription("Communication", 4, "Customer service");
+	appendToDescription("Communication", 4, "Funding");
+	appendToDescription("Communication", 4, "Human resource management");
+	appendToDescription("Communication", 4, "Market positioning");
+	appendToDescription("Communication", 4, "Production");
+	appendToDescription("Communication", 4, "Promotion");
+	appendToDescription("Communication", 4, "Sales");
+	appendToDescription("Communication", 4, "Stakeholder management");
+	appendToDescription("Communication", 4, "Vision socialisation");
+	appendToDescription("Delegation", 4, "Human resource management");
+	appendToDescription("Delegation", 4, "Organisational development");
+	appendToDescription("Delegation", 4, "Production");
+	appendToDescription("Delegation", 4, "Strategic management");
+	appendToDescription("Feedback", 4, "Customer service");
+	appendToDescription("Feedback", 4, "Delivery design");
+	appendToDescription("Feedback", 4, "Human resource management");
+	appendToDescription("Feedback", 4, "Market positioning");
+	appendToDescription("Feedback", 4, "Opportunity identification");
+	appendToDescription("Feedback", 4, "Production");
+	appendToDescription("Feedback", 4, "Sales");
+	appendToDescription("Feedback", 4, "Stakeholder management");
+	appendToDescription("Feedback", 4, "Vision socialisation");
+	appendToDescription("Influencing", 4, "Business case development");
+	appendToDescription("Influencing", 4, "Change management");
+	appendToDescription("Influencing", 4, "Delivery design");
+	appendToDescription("Influencing", 4, "Funding");
+	appendToDescription("Influencing", 4, "Human resource management");
+	appendToDescription("Influencing", 4, "Organisational development");
+	appendToDescription("Influencing", 4, "Promotion");
+	appendToDescription("Influencing", 4, "Sales");
+	appendToDescription("Influencing", 4, "Stakeholder management");
+	appendToDescription("Influencing", 4, "Vision socialisation");
+	appendToDescription("Negotiation", 4, "Business case development");
+	appendToDescription("Negotiation", 4, "Customer service");
+	appendToDescription("Negotiation", 4, "Funding");
+	appendToDescription("Negotiation", 4, "Human resource management");
+	appendToDescription("Negotiation", 4, "Knowledge management");
+	appendToDescription("Negotiation", 4, "Organisational development");
+	appendToDescription("Negotiation", 4, "Production");
+	appendToDescription("Negotiation", 4, "Promotion");
+	appendToDescription("Negotiation", 4, "Sales");
+	appendToDescription("Negotiation", 4, "Stakeholder management");
+    
+	// Call the function to create the skill components
+    createSkillComponents();
+
+    // Initial render
+    updateSunburst();
+	// Call the function to sync each slider with its respective input field
+    for (let i = 1; i <= 30; i++) {
+        syncSliderAndInput(`slider${i}`, `input${i}`);
+    }
+	//Initial value for the Area dropdown
+    const areaDropdown = document.getElementById("areaOfInterest");
+	console.log("Checking queryParams: ", queryParams[2]);
+	if (queryParams[2]-1 >= 0 && queryParams[2] <= areaDropdown.options.length) {
+		console.log("Setting areaDropdown to option: ", queryParams[2]-1);
+		areaDropdown.selectedIndex = queryParams[2]-1; // Set the dropdown selection based on index
+    } else {
+		console.log("Setting default areaDropdown");
+		areaDropdown.selectedIndex = 2; // Default to the first option if index is out of bounds
+    }
+		
+	// Attach the Area function to the button
+	console.log("Attaching Area function...");
+	document.getElementById("areaOfInterest").addEventListener("change", function() {
+		const selectedArea = this.value;
+		const selectedIndex = this.selectedIndex; // Get the index of the selected option
+		const parameterValue = selectedIndex +1; // Set parameter value based on the selected index
+		// Update the parameter named 2 in the URL
+		updateUrlParameter("2", parameterValue); // Pass the parameter position (1-based index) and new value
+		queryParams = getQueryParams();
+		updateSunburst();	
+		filterTaskTable();
+	});
+
+
+
+	// Attach the toggle function to the checkbox
+	console.log("Attaching toggle function...");
+	document.getElementById("toggleMax").addEventListener("change", function() {
+		updateMaxValue();
+		resetSkillsCombination();
+	
+	});
+	
+	// Attach the export function to the button
+	console.log("Attaching export function...");
+	document.getElementById('exportButton').addEventListener('click', exportSunburst);
+	
+	// Attach event listener to the Skills Combination dropdown
+	console.log("Attaching Skill combination functions...");
+	document.getElementById("skillsCombo").addEventListener("change", function() {
+		const selectedCombination = this.value;
+
+		// a) Reset toggleMax and call updateMaxValue
+		resetToggleMax();
+
+		// b) Populate fields based on the selected combination
+		if (selectedCombination !== "custom") {
+			updateSkillWeights(selectedCombination);
+		}
+
+	});
+
+	// Attach the randomize function to the button
+	console.log("Attaching randomization function...");
+    document.getElementById('randomizeButton').addEventListener('click', randomizeWeights);
+	
+    // Add an event listener to check for URL changes
+	console.log("Attaching highlightTableRow function for hashchange...");
+    window.addEventListener("hashchange", highlightTableRow);
+
+    // Call the function on page load in case there's already a hash
+	console.log("Attaching highlightTableRow function for DOMContentLoaded...");
+    document.addEventListener("DOMContentLoaded", highlightTableRow);
+
+	//console.log("Filtering the task table on initialisation...");
+	filterTaskTable();
+
+	
+</script>
+
+</body>
+</html>
