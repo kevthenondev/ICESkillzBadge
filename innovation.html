@@ -944,7 +944,7 @@
                 const row = document.createElement('tr');
 
 				// Get the appropriate value from queryParams based on the index
-				const inputValue = values[inputIndex] ? Number(values[inputIndex]) : component.value; // Fallback to default value
+				const inputValue = values[inputIndex] ? Number(values[inputIndex]) : 0; // Fallback to default value
 
                 // If it's the first child of the group, add the group name
                 if (index === 0) {
